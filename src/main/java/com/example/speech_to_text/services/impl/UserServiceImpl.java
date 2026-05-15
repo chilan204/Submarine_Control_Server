@@ -8,41 +8,25 @@ import com.example.speech_to_text.repositories.UserRepository;
 import com.example.speech_to_text.services.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final String baseDir;
 
     @Autowired
     public UserServiceImpl(
             UserRepository userRepository,
-            UserMapper userMapper,
-            @Value("${app.voice.storage:voice_samples}") String baseDir
+            UserMapper userMapper
     ) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
-        this.baseDir = baseDir;
-        initBaseDir();
-    }
-
-    private void initBaseDir() {
-        try {
-            Files.createDirectories(Paths.get(baseDir));
-        } catch (IOException e) {
-            throw new RuntimeException("Cannot init voice storage dir");
-        }
     }
 
     @Override
@@ -50,7 +34,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll()
                 .stream()
                 .map(userMapper::toResponseDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -78,24 +62,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Path userDir = Paths.get(baseDir, user.getId().toString());
-
-        try {
-            if (Files.exists(userDir)) {
-                Files.walk(userDir)
-                        .sorted((a, b) -> b.compareTo(a))
-                        .forEach(p -> {
-                            try { Files.delete(p); }
-                            catch (IOException e) { throw new RuntimeException("Delete fail: " + p); }
-                        });
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error deleting user voice folder");
-        }
-
         userRepository.deleteById(id);
     }
 
@@ -108,60 +74,5 @@ public class UserServiceImpl implements UserService {
     public User findEntityByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    @Override
-    public void saveVoiceSample(Long userId, MultipartFile file) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        try {
-            Path userDir = Paths.get(baseDir, user.getId().toString());
-            Files.createDirectories(userDir);
-
-            String original = file.getOriginalFilename();
-            String safeName = (original == null || original.isBlank()) ? "audio.wav" : original;
-
-            String fileName = System.currentTimeMillis() + "_" + safeName;
-            Path filePath = userDir.resolve(fileName);
-
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        } catch (IOException e) {
-            throw new RuntimeException("Error saving voice sample");
-        }
-    }
-
-    @Override
-    public List<String> getVoiceSamples(Long userId) {
-        Path userDir = Paths.get(baseDir, userId.toString());
-
-        try {
-            if (!Files.exists(userDir)) return List.of();
-
-            return Files.list(userDir)
-                    .map(p -> p.getFileName().toString())
-                    .collect(Collectors.toList());
-
-        } catch (IOException e) {
-            throw new RuntimeException("Error reading voice samples");
-        }
-    }
-
-    @Override
-    public void deleteVoiceSample(Long userId, String fileName) {
-        Path filePath = Paths.get(baseDir, userId.toString(), fileName);
-
-        try {
-            if (!Files.exists(filePath)) throw new RuntimeException("File not found");
-            Files.delete(filePath);
-        } catch (IOException e) {
-            throw new RuntimeException("Error deleting voice sample");
-        }
-    }
-
-    @Override
-    public void save(User user) {
-        userRepository.save(user);
     }
 }

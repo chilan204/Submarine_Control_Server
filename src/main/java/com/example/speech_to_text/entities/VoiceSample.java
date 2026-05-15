@@ -6,12 +6,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Entity
-@Table(
-        name = "voice_samples",
-        indexes = {
-                @Index(name = "idx_user_id", columnList = "user_id")
-        }
-)
+@Table(name = "voice_samples")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -38,7 +33,7 @@ public class VoiceSample extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String embedding;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 }

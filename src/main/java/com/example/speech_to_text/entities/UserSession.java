@@ -6,12 +6,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Entity
-@Table(
-        name = "user_sessions",
-        indexes = {
-                @Index(name = "idx_user_id", columnList = "user_id")
-        }
-)
+@Table(name = "user_sessions")
 @Getter
 @Setter
 @NoArgsConstructor

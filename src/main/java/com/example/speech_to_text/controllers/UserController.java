@@ -14,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -54,19 +53,19 @@ public class UserController {
         );
     }
 
-    @PostMapping
-    public ResponseEntity<ResponseBase<UserResponse>> createUser(
-            @Valid @RequestBody UserRequest userRequest
-    ) {
-        UserResponse dto = userService.createUser(userRequest);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                ResponseBase.<UserResponse>builder()
-                        .data(dto)
-                        .message("Create User successfully")
-                        .build()
-        );
-    }
+//    @PostMapping
+//    public ResponseEntity<ResponseBase<UserResponse>> createUser(
+//            @Valid @RequestBody UserRequest userRequest
+//    ) {
+//        UserResponse dto = userService.createUser(userRequest);
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(
+//                ResponseBase.<UserResponse>builder()
+//                        .data(dto)
+//                        .message("Create User successfully")
+//                        .build()
+//        );
+//    }
 
     @PutMapping("/{id}")
     public ResponseEntity<ResponseBase<UserResponse>> updateUser(
@@ -92,58 +91,6 @@ public class UserController {
         return ResponseEntity.ok(
                 ResponseBase.<Void>builder()
                         .message("Delete User successfully")
-                        .build()
-        );
-    }
-
-    @PostMapping("/{id}/voice")
-    public ResponseEntity<ResponseBase<String>> uploadVoice(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile file
-    ) {
-        if (file == null || file.isEmpty()) {
-            return ResponseEntity.badRequest().body(
-                    ResponseBase.<String>builder()
-                            .message("File không hợp lệ")
-                            .build()
-            );
-        }
-
-        userService.saveVoiceSample(id, file);
-
-        return ResponseEntity.ok(
-                ResponseBase.<String>builder()
-                        .data("Uploaded successfully")
-                        .message("Voice sample uploaded")
-                        .build()
-        );
-    }
-
-    @GetMapping("/{id}/voice")
-    public ResponseEntity<ResponseBase<List<String>>> getVoiceSamples(
-            @PathVariable Long id
-    ) {
-        List<String> samples = userService.getVoiceSamples(id);
-
-        return ResponseEntity.ok(
-                ResponseBase.<List<String>>builder()
-                        .data(samples)
-                        .message("Get voice samples successfully")
-                        .build()
-        );
-    }
-
-    @DeleteMapping("/{id}/voice")
-    public ResponseEntity<ResponseBase<String>> deleteVoiceSample(
-            @PathVariable Long id,
-            @RequestParam("fileName") String fileName
-    ) {
-        userService.deleteVoiceSample(id, fileName);
-
-        return ResponseEntity.ok(
-                ResponseBase.<String>builder()
-                        .data("Deleted")
-                        .message("Voice sample deleted")
                         .build()
         );
     }

@@ -52,6 +52,7 @@ public class SecurityConfiguration {
 
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/voice-samples",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**"
                         ).permitAll()

@@ -6,28 +6,19 @@ import com.example.speech_to_text.entities.User;
 import com.example.speech_to_text.mapper.UserMapper;
 import com.example.speech_to_text.repositories.UserRepository;
 import com.example.speech_to_text.services.UserService;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.*;
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-
-    @Autowired
-    public UserServiceImpl(
-            UserRepository userRepository,
-            UserMapper userMapper
-    ) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-    }
 
     @Override
     public List<UserResponse> getAllUser() {

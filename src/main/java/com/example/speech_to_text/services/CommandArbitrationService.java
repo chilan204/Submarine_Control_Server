@@ -5,5 +5,5 @@ import com.example.speech_to_text.enums.CommandArbitrationStatus;
 
 public interface CommandArbitrationService {
 
-    CommandArbitrationStatus processCommand(User user);
+    CommandArbitrationStatus processCommand(User user, String command);
 }

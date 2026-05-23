@@ -53,7 +53,4 @@ public class UserSession extends BaseEntity {
 
     @Column
     private String role;
-
-    @Column(columnDefinition = "TEXT")
-    private String rawResponse;
 }

@@ -1,15 +1,15 @@
 package com.example.speech_to_text.controllers;
 
 import com.example.speech_to_text.dto.common.response.ResponseBase;
+import com.example.speech_to_text.dto.response.VoiceCommandDetail;
 import com.example.speech_to_text.dto.response.VoiceCommandResponse;
 import com.example.speech_to_text.entities.User;
 import com.example.speech_to_text.enums.CommandArbitrationStatus;
 import com.example.speech_to_text.repositories.UserRepository;
-import com.example.speech_to_text.services.AIService;
-import com.example.speech_to_text.services.CommandArbitrationService;
-import com.example.speech_to_text.services.UserSessionService;
+import com.example.speech_to_text.services.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -18,28 +18,17 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/voice-command")
 public class VoiceCommandController {
 
     private final AIService aiService;
     private final ObjectMapper mapper;
     private final UserRepository userRepository;
-    private final UserSessionService sessionService;
+    private final UserSessionService userSessionService;
     private final CommandArbitrationService arbitrationService;
-
-    public VoiceCommandController(
-            AIService aiService,
-            ObjectMapper mapper,
-            UserRepository userRepository,
-            UserSessionService sessionService,
-            CommandArbitrationService arbitrationService
-    ) {
-        this.aiService = aiService;
-        this.mapper = mapper;
-        this.userRepository = userRepository;
-        this.sessionService = sessionService;
-        this.arbitrationService = arbitrationService;
-    }
+    private final CommandAuthorizationService commandAuthorizationService;
+    private final DroneCommandService droneCommandService;
 
     @PostMapping
     public ResponseEntity<ResponseBase<VoiceCommandResponse>> handle(
@@ -56,6 +45,10 @@ public class VoiceCommandController {
 
         try (InputStream is = file.getInputStream()) {
 
+            // =====================================================
+            // 1. GET CURRENT USER
+            // =====================================================
+
             User user = getCurrentUser();
 
             if (user == null) {
@@ -66,29 +59,14 @@ public class VoiceCommandController {
                 );
             }
 
-            // =========================
-            // 1. ARBITRATION FIRST
-            // =========================
-            CommandArbitrationStatus decision = arbitrationService.processCommand(user);
+            // =====================================================
+            // 2. AI PROCESS
+            //    - Speaker Identification
+            //    - Speaker Verification
+            //    - Whisper Transcription
+            //    - Command Extraction
+            // =====================================================
 
-            // Chỉ lệnh được đánh EXECUTED mới được đi tiếp.
-            if (decision != CommandArbitrationStatus.EXECUTED) {
-
-                VoiceCommandResponse reject = new VoiceCommandResponse();
-                reject.setStatus(decision.name());
-                reject.setRole(user.getRole().name());
-
-                return ResponseEntity.status(403).body(
-                        ResponseBase.<VoiceCommandResponse>builder()
-                                .data(reject)
-                                .message("Rejected by arbitration")
-                                .build()
-                );
-            }
-
-            // =========================
-            // 2. AI ONLY IF ALLOWED
-            // =========================
             String json = aiService.processVoice(is);
 
             if (json == null || json.isBlank()) {
@@ -98,18 +76,135 @@ public class VoiceCommandController {
             JsonNode node = mapper.readTree(json);
 
             VoiceCommandResponse response =
-                    mapper.treeToValue(node, VoiceCommandResponse.class);
+                    mapper.treeToValue(
+                            node,
+                            VoiceCommandResponse.class
+                    );
 
-            // =========================
-            // 3. APPLY ARBITRATION RESULT
-            // =========================
-            response.setStatus(decision.name());
-            response.setRole(user.getRole().name());
+            // =====================================================
+            // 3. VERIFY SPEAKER
+            // =====================================================
 
-            // =========================
-            // 4. SAVE SESSION
-            // =========================
-            sessionService.createFromAIResponse(user, response);
+            Double verificationScore =
+                    response.getVerificationScore();
+
+            if (verificationScore == null
+                    || verificationScore < 0.75) {
+
+                response.setStatus("SPEAKER_VERIFICATION_FAILED");
+
+                return ResponseEntity.status(403).body(
+                        ResponseBase.<VoiceCommandResponse>builder()
+                                .data(response)
+                                .message("Speaker verification failed")
+                                .build()
+                );
+            }
+
+            // =====================================================
+            // 4. EXTRACT COMMAND TEXT
+            // =====================================================
+
+            VoiceCommandDetail command =
+                    response.getCommand();
+
+            if (command == null) {
+
+                response.setStatus("INVALID_COMMAND");
+
+                return ResponseEntity.badRequest().body(
+                        ResponseBase.<VoiceCommandResponse>builder()
+                                .data(response)
+                                .message("Cannot extract command")
+                                .build()
+                );
+            }
+
+            String commandText =
+                    command.toCommandText();
+
+            // =====================================================
+            // 5. COMMAND ARBITRATION
+            // =====================================================
+
+            CommandArbitrationStatus arbitrationStatus =
+                    arbitrationService.processCommand(
+                            user,
+                            commandText
+                    );
+
+            if (arbitrationStatus
+                    != CommandArbitrationStatus.EXECUTED) {
+
+                response.setStatus(
+                        arbitrationStatus.name()
+                );
+
+                response.setRole(
+                        user.getRole().getCode()
+                );
+
+                return ResponseEntity.status(403).body(
+                        ResponseBase.<VoiceCommandResponse>builder()
+                                .data(response)
+                                .message("Rejected by arbitration")
+                                .build()
+                );
+            }
+
+            // =====================================================
+            // 6. ROLE AUTHORIZATION
+            // =====================================================
+
+            boolean allowed =
+                    commandAuthorizationService
+                            .isAllowed(
+                                    user.getRole(),
+                                    command
+                            );
+
+            if (!allowed) {
+
+                response.setStatus("ROLE_DENIED");
+
+                response.setRole(
+                        user.getRole().getCode()
+                );
+
+                return ResponseEntity.status(403).body(
+                        ResponseBase.<VoiceCommandResponse>builder()
+                                .data(response)
+                                .message("Role permission denied")
+                                .build()
+                );
+            }
+
+            // =====================================================
+            // 7. EXECUTE COMMAND
+            // =====================================================
+
+            droneCommandService.execute(command);
+
+            // =====================================================
+            // 8. FINAL RESPONSE
+            // =====================================================
+
+            response.setStatus(
+                    CommandArbitrationStatus.EXECUTED.name()
+            );
+
+            response.setRole(
+                    user.getRole().getCode()
+            );
+
+            // =====================================================
+            // 9. SAVE SESSION / AUDIT
+            // =====================================================
+
+            userSessionService.createFromAIResponse(
+                    user,
+                    response
+            );
 
             return ResponseEntity.ok(
                     ResponseBase.<VoiceCommandResponse>builder()

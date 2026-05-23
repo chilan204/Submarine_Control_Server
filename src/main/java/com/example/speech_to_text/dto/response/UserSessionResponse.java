@@ -27,7 +27,11 @@ public class UserSessionResponse {
 
     private Boolean verified;
 
-    private String rawResponse;
+    private String role;
+
+    private String commandStatus;
+
+    private Boolean executed;
 
     private LocalDateTime createdDate;
 }

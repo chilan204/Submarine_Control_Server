@@ -6,6 +6,7 @@ import com.example.speech_to_text.services.VoiceSampleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -32,7 +33,7 @@ public class VoiceSampleController {
         );
     }
 
-    @PostMapping
+    @PutMapping
     public ResponseEntity<ResponseBase<String>> uploadVoice(
             @PathVariable Long userId,
             @RequestParam("file") MultipartFile file
@@ -46,6 +47,19 @@ public class VoiceSampleController {
         }
 
         voiceSampleService.saveVoiceSample(userId, file);
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+
+            restTemplate.postForEntity(
+                    "http://localhost:5000/reload-cache",
+                    null,
+                    String.class
+            );
+
+        } catch (Exception e) {
+            System.out.println("Cannot notify AI service: " + e.getMessage());
+        }
 
         return ResponseEntity.ok(
                 ResponseBase.<String>builder()

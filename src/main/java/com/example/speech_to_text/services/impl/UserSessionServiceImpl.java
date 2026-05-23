@@ -8,41 +8,38 @@ import com.example.speech_to_text.enums.CommandArbitrationStatus;
 import com.example.speech_to_text.mapper.UserSessionMapper;
 import com.example.speech_to_text.repositories.UserSessionRepository;
 import com.example.speech_to_text.services.UserSessionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class UserSessionServiceImpl implements UserSessionService {
 
-    private final UserSessionRepository repository;
-    private final UserSessionMapper mapper;
-
-    public UserSessionServiceImpl(UserSessionRepository repository, UserSessionMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
+    private final UserSessionRepository userSessionRepository;
+    private final UserSessionMapper userSessionMapper;
 
     @Override
     public List<UserSessionResponse> getAllUserSession() {
-        return repository.findAll()
+        return userSessionRepository.findAll()
                 .stream()
-                .map(mapper::toResponseDTO)
+                .map(userSessionMapper::toResponseDTO)
                 .toList();
     }
 
     @Override
     public UserSessionResponse getUserSessionById(Long id) {
-        return repository.findById(id)
-                .map(mapper::toResponseDTO)
+        return userSessionRepository.findById(id)
+                .map(userSessionMapper::toResponseDTO)
                 .orElse(null);
     }
 
     @Override
     public List<UserSessionResponse> getUserSessionByUserId(Long userId) {
-        return repository.findByUserIdOrderByIdDesc(userId)
+        return userSessionRepository.findByUserIdOrderByIdDesc(userId)
                 .stream()
-                .map(mapper::toResponseDTO)
+                .map(userSessionMapper::toResponseDTO)
                 .toList();
     }
 
@@ -51,6 +48,9 @@ public class UserSessionServiceImpl implements UserSessionService {
         UserSession session = UserSession.builder()
                 .user(user)
                 .transcript(response.getText())
+                .action(response.getCommand() != null ? response.getCommand().getAction() : null)
+                .direction(response.getCommand() != null ? response.getCommand().getDirection() : null)
+                .value(response.getCommand() != null ? response.getCommand().getValue() : null)
                 .speaker(response.getSpeaker())
                 .speakerScore(response.getSpeakerScore())
                 .verificationScore(response.getVerificationScore())
@@ -59,13 +59,12 @@ public class UserSessionServiceImpl implements UserSessionService {
                 .executed(
                         CommandArbitrationStatus.EXECUTED.name()
                                 .equals(response.getStatus()))
-                .rawResponse(response.toString())
                 .build();
-        repository.save(session);
+        userSessionRepository.save(session);
     }
 
     @Override
     public void deleteUserSession(Long id) {
-        repository.deleteById(id);
+        userSessionRepository.deleteById(id);
     }
 }

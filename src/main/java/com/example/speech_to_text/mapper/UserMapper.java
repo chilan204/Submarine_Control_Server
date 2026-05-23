@@ -2,15 +2,23 @@ package com.example.speech_to_text.mapper;
 
 import com.example.speech_to_text.dto.request.UserRequest;
 import com.example.speech_to_text.dto.response.UserResponse;
+import com.example.speech_to_text.entities.Role;
 import com.example.speech_to_text.entities.User;
-import com.example.speech_to_text.enums.UserRole;
+import com.example.speech_to_text.repositories.RoleRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class UserMapper {
+
+    private final RoleRepository roleRepository;
 
     public User toEntity(UserRequest dto) {
         if (dto == null) return null;
+
+        Role defaultRole = roleRepository.findByCode("OFFICER_1")
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
 
         User user = new User();
         user.setUsername(dto.getUsername());
@@ -18,7 +26,7 @@ public class UserMapper {
         user.setEmail(dto.getEmail());
         user.setPassword(dto.getPassword());
         user.setPhone(dto.getPhone());
-        user.setRole(UserRole.USER);
+        user.setRole(defaultRole);
 
         return user;
     }
@@ -40,7 +48,15 @@ public class UserMapper {
         dto.setName(entity.getName());
         dto.setEmail(entity.getEmail());
         dto.setPhone(entity.getPhone());
-        dto.setRole(entity.getRole());
+
+        if (entity.getRole() != null) {
+            dto.setRoleCode(
+                    entity.getRole().getCode()
+            );
+            dto.setRolePriority(
+                    entity.getRole().getPriority()
+            );
+        }
 
         return dto;
     }

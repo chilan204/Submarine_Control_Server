@@ -1,6 +1,5 @@
 package com.example.speech_to_text.dto.response;
 
-import com.example.speech_to_text.enums.UserRole;
 import lombok.Data;
 
 @Data
@@ -16,5 +15,7 @@ public class UserResponse {
 
     private String phone;
 
-    private UserRole role;
+    private String roleCode;
+
+    private Integer rolePriority;
 }

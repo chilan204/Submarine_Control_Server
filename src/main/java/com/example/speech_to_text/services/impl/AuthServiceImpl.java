@@ -3,17 +3,26 @@ package com.example.speech_to_text.services.impl;
 import com.example.speech_to_text.dto.request.ChangePasswordRequest;
 import com.example.speech_to_text.dto.request.UserRequest;
 import com.example.speech_to_text.dto.request.ValidateOtpRequest;
-import com.example.speech_to_text.dto.response.LoginResponse;
+import com.example.speech_to_text.dto.response.PasswordLoginResponse;
 import com.example.speech_to_text.dto.response.UserResponse;
+import com.example.speech_to_text.dto.response.VoiceLoginResponse;
+import com.example.speech_to_text.entities.Role;
 import com.example.speech_to_text.entities.User;
-import com.example.speech_to_text.enums.UserRole;
 import com.example.speech_to_text.mapper.UserMapper;
+import com.example.speech_to_text.repositories.RoleRepository;
 import com.example.speech_to_text.repositories.UserRepository;
 import com.example.speech_to_text.security.JwtUtil;
+import com.example.speech_to_text.services.AIService;
 import com.example.speech_to_text.services.AuthService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
+
+@RequiredArgsConstructor
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -21,18 +30,9 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
-
-    public AuthServiceImpl(
-            UserRepository userRepository,
-            UserMapper userMapper,
-            JwtUtil jwtUtil,
-            PasswordEncoder passwordEncoder
-    ) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-        this.jwtUtil = jwtUtil;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final RoleRepository roleRepository;
+    private final AIService aiService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public UserResponse register(UserRequest req) {
@@ -43,6 +43,14 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Username already taken");
         }
 
+        Role defaultRole =
+                roleRepository.findByCode("OFFICER_1")
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Default role not found"
+                                )
+                        );
+
         User user = new User();
 
         user.setUsername(req.getUsername().toLowerCase());
@@ -50,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(req.getEmail());
         user.setName(req.getName());
         user.setPhone(req.getPhone());
-        user.setRole(UserRole.USER);
+        user.setRole(defaultRole);
 
         User savedUser = userRepository.save(user);
 
@@ -58,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginResponse login(UserRequest req) {
+    public PasswordLoginResponse passwordLogin(UserRequest req) {
 
         User user = userRepository.findByUsername(
                 req.getUsername().toLowerCase()
@@ -73,14 +81,19 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid password");
         }
 
+        String roleCode =
+                user.getRole() != null
+                        ? user.getRole().getCode()
+                        : "UNKNOWN";
+
         String token = jwtUtil.generateToken(
                 user.getUsername(),
-                user.getRole().name()
+                roleCode
         );
 
-        return LoginResponse.builder()
+        return PasswordLoginResponse.builder()
                 .token(token)
-                .role(user.getRole().name())
+                .roleCode(roleCode)
                 .username(user.getUsername())
                 .name(user.getName())
                 .userId(user.getId())
@@ -88,8 +101,61 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public VoiceLoginResponse voiceLogin(InputStream inputStream) {
+        try {
+            String json = aiService.processVoice(inputStream);
+
+            if (json == null || json.isBlank()) {
+                throw new RuntimeException("Empty AI response");
+            }
+
+            JsonNode node = objectMapper.readTree(json);
+
+            // FIX: đúng field name từ AI
+            String speaker = node.path("speaker_id").asText();
+            double verificationScore = node.path("verification_score").asDouble();
+            String text = node.path("text").asText();
+
+            if (speaker == null || speaker.isBlank()) {
+                throw new RuntimeException("Invalid speaker from AI");
+            }
+
+            if (verificationScore < 0.75) {
+                throw new RuntimeException("Speaker verification failed");
+            }
+
+            long userId;
+            try {
+                userId = Long.parseLong(speaker.trim());
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("Invalid speaker format: " + speaker);
+            }
+
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Speaker user not found"));
+
+            String roleCode = user.getRole().getCode();
+            String token = jwtUtil.generateToken(user.getUsername(), roleCode);
+
+            return VoiceLoginResponse.builder()
+                    .authenticated(true)
+                    .token(token)
+                    .userId(user.getId())
+                    .username(user.getUsername())
+                    .name(user.getName())
+                    .roleCode(roleCode)
+                    .speaker(speaker)
+                    .verificationScore(verificationScore)
+                    .text(text)
+                    .build();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Voice login failed: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public void logout() {
-        // JWT stateless -> frontend chỉ cần xóa token
     }
 
     @Override

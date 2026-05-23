@@ -18,7 +18,7 @@ public class VoiceCommandResponse {
 
     private String text;
 
-    private Object command;
+    private VoiceCommandDetail command;
 
     private String role;
 }

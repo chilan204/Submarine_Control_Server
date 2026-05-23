@@ -1,7 +1,8 @@
 package com.example.speech_to_text;
 
+import com.example.speech_to_text.entities.Role;
 import com.example.speech_to_text.entities.User;
-import com.example.speech_to_text.enums.UserRole;
+import com.example.speech_to_text.repositories.RoleRepository;
 import com.example.speech_to_text.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +36,9 @@ public class SpeechToTextApplication implements CommandLineRunner {
     private String adminPhone;
 
     private final UserRepository userRepository;
+
+    private final RoleRepository roleRepository;
+
     private final PasswordEncoder passwordEncoder;
 
     public static void main(String[] args) {
@@ -44,26 +48,134 @@ public class SpeechToTextApplication implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        Optional<User> existing = userRepository.findByUsername(adminUsername);
-        if (existing.isEmpty()) {
-            if (userRepository.findByEmail(adminEmail).isPresent()) {
-                System.out.println("Admin email already present in DB");
-                return;
-            }
 
-            User admin = new User();
-            admin.setUsername(adminUsername.toLowerCase());
-            admin.setName(adminName);
-            admin.setEmail(adminEmail.toLowerCase());
-            admin.setPhone(adminPhone);
-            admin.setPassword(passwordEncoder.encode(adminPassword));
-            admin.setCreatedBy("system");
-            admin.setModifiedBy("system");
-            admin.setRole(UserRole.ADMIN);
-            userRepository.save(admin);
-            System.out.println("Default admin created: username=" + adminUsername);
-        } else {
-            System.out.println("Admin user already exists: " + adminUsername);
+        // =====================================================
+        // INIT ROLES
+        // =====================================================
+
+        createRoleIfNotExists(
+                "ADMIN",
+                999
+        );
+
+        createRoleIfNotExists(
+                "OFFICER_5",
+                5
+        );
+
+        createRoleIfNotExists(
+                "OFFICER_4",
+                4
+        );
+
+        createRoleIfNotExists(
+                "OFFICER_3",
+                3
+        );
+
+        createRoleIfNotExists(
+                "OFFICER_2",
+                2
+        );
+
+        createRoleIfNotExists(
+                "OFFICER_1",
+                1
+        );
+
+        // =====================================================
+        // INIT ADMIN USER
+        // =====================================================
+
+        Optional<User> existing =
+                userRepository.findByUsername(adminUsername);
+
+        if (existing.isPresent()) {
+
+            System.out.println(
+                    "Admin user already exists: "
+                            + adminUsername
+            );
+
+            return;
         }
+
+        if (userRepository.findByEmail(adminEmail).isPresent()) {
+
+            System.out.println(
+                    "Admin email already present in DB"
+            );
+
+            return;
+        }
+
+        Role adminRole =
+                roleRepository.findByCode("ADMIN")
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "ADMIN role not found"
+                                )
+                        );
+
+        User admin = new User();
+
+        admin.setUsername(
+                adminUsername.toLowerCase()
+        );
+
+        admin.setName(adminName);
+
+        admin.setEmail(
+                adminEmail.toLowerCase()
+        );
+
+        admin.setPhone(adminPhone);
+
+        admin.setPassword(
+                passwordEncoder.encode(adminPassword)
+        );
+
+        admin.setCreatedBy("system");
+
+        admin.setModifiedBy("system");
+
+        admin.setRole(adminRole);
+
+        userRepository.save(admin);
+
+        System.out.println(
+                "Default admin created: username="
+                        + adminUsername
+        );
+    }
+
+    // =====================================================
+    // CREATE ROLE IF NOT EXISTS
+    // =====================================================
+
+    private void createRoleIfNotExists(String code, Integer priority) {
+
+        boolean exists =
+                roleRepository.findByCode(code).isPresent();
+
+        if (exists) {
+            return;
+        }
+
+        Role role = new Role();
+
+        role.setCode(code);
+
+        role.setPriority(priority);
+
+        role.setCreatedBy("system");
+
+        role.setModifiedBy("system");
+
+        roleRepository.save(role);
+
+        System.out.println(
+                "Role created: " + code
+        );
     }
 }

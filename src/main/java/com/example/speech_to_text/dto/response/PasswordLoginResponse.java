@@ -4,11 +4,11 @@ import lombok.*;
 
 @Data
 @Builder
-public class LoginResponse {
+public class PasswordLoginResponse {
 
     private String token;
 
-    private String role;
+    private String roleCode;
 
     private String username;
 

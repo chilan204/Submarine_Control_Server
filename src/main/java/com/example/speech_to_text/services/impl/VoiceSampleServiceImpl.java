@@ -7,7 +7,6 @@ import com.example.speech_to_text.repositories.UserRepository;
 import com.example.speech_to_text.repositories.VoiceSampleRepository;
 import com.example.speech_to_text.services.VoiceSampleService;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +29,6 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
     private final VoiceSampleRepository voiceSampleRepository;
     private final String baseDir;
 
-    @Autowired
     public VoiceSampleServiceImpl(
             UserRepository userRepository,
             VoiceSampleRepository voiceSampleRepository,
@@ -72,17 +70,21 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
         }
 
         try {
-            voiceSampleRepository.findByUserId(userId).ifPresent(old -> {
-                try {
-                    Files.deleteIfExists(Paths.get(baseDir, old.getFilePath()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                voiceSampleRepository.delete(old);
-            });
+            // ================= GET EXISTING SAMPLE =================
+            VoiceSample existing = voiceSampleRepository.findByUserId(userId)
+                    .orElse(null);
 
+            String oldFilePath = null;
+
+            if (existing != null) {
+                oldFilePath = existing.getFilePath();
+            }
+
+            // ================= SAVE NEW FILE =================
             String safeName = Paths.get(
-                    file.getOriginalFilename() == null ? "audio.wav" : file.getOriginalFilename()
+                    file.getOriginalFilename() == null
+                            ? "audio.wav"
+                            : file.getOriginalFilename()
             ).getFileName().toString();
 
             String fileName = "voice_" + UUID.randomUUID() + "_" + safeName;
@@ -93,15 +95,27 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
 
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
-            VoiceSample voiceSample = VoiceSample.builder()
-                    .fileName(fileName)
-                    .filePath(relativePath)
-                    .duration(extractDuration(targetPath))
-                    .active(true)
-                    .user(user)
-                    .build();
+            // ================= UPSERT ENTITY =================
+            VoiceSample voiceSample = (existing != null)
+                    ? existing
+                    : new VoiceSample();
+
+            voiceSample.setUser(user);
+            voiceSample.setFileName(fileName);
+            voiceSample.setFilePath(relativePath);
+            voiceSample.setDuration(extractDuration(targetPath));
+            voiceSample.setActive(true);
 
             voiceSampleRepository.save(voiceSample);
+
+            // ================= DELETE OLD FILE (SAFE AFTER SAVE) =================
+            if (oldFilePath != null) {
+                try {
+                    Files.deleteIfExists(Paths.get(baseDir, oldFilePath));
+                } catch (IOException e) {
+                    System.out.println("Cannot delete old file: " + e.getMessage());
+                }
+            }
 
         } catch (IOException e) {
             throw new RuntimeException("Error saving voice sample", e);

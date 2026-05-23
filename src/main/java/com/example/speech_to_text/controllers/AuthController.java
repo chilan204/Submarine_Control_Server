@@ -4,12 +4,15 @@ import com.example.speech_to_text.dto.common.response.ResponseBase;
 import com.example.speech_to_text.dto.request.ChangePasswordRequest;
 import com.example.speech_to_text.dto.request.UserRequest;
 import com.example.speech_to_text.dto.request.ValidateOtpRequest;
-import com.example.speech_to_text.dto.response.LoginResponse;
+import com.example.speech_to_text.dto.response.PasswordLoginResponse;
 import com.example.speech_to_text.dto.response.UserResponse;
+import com.example.speech_to_text.dto.response.VoiceLoginResponse;
 import com.example.speech_to_text.services.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.Map;
 
 @RestController
@@ -35,16 +38,45 @@ public class AuthController {
         );
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<ResponseBase<LoginResponse>> login(@RequestBody UserRequest req) {
-        LoginResponse res = authService.login(req);
+    @PostMapping("/password-login")
+    public ResponseEntity<ResponseBase<PasswordLoginResponse>> login(@RequestBody UserRequest req) {
+        PasswordLoginResponse res = authService.passwordLogin(req);
 
         return ResponseEntity.ok(
-                ResponseBase.<LoginResponse>builder()
+                ResponseBase.<PasswordLoginResponse>builder()
                         .data(res)
                         .message("Login successfully")
                         .build()
         );
+    }
+
+    @PostMapping("/voice-login")
+    public ResponseEntity<ResponseBase<VoiceLoginResponse>> voiceLogin(@RequestParam("file") MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(
+                    ResponseBase.<VoiceLoginResponse>builder()
+                            .message("Invalid audio file")
+                            .build()
+            );
+        }
+
+        try (InputStream is = file.getInputStream()) {
+            VoiceLoginResponse response = authService.voiceLogin(is);
+            return ResponseEntity.ok(
+                    ResponseBase.<VoiceLoginResponse>builder()
+                            .data(response)
+                            .message("Voice login success")
+                            .build()
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(
+                    ResponseBase.<VoiceLoginResponse>builder()
+                            .message(e.getMessage())
+                            .build()
+            );
+        }
     }
 
     @PostMapping("/logout")

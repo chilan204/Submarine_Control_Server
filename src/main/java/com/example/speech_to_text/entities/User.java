@@ -1,7 +1,6 @@
 package com.example.speech_to_text.entities;
 
 import com.example.speech_to_text.entities.bases.BaseEntity;
-import com.example.speech_to_text.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -48,9 +47,9 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 20)
     private String phone;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role = UserRole.USER;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
 
     @OneToOne(
             mappedBy = "user",

@@ -26,7 +26,9 @@ public class UserSessionMapper {
         dto.setVerificationScore(entity.getVerificationScore());
         dto.setVerified(entity.getVerified());
 
-        dto.setRawResponse(entity.getRawResponse());
+        dto.setRole(entity.getRole());
+        dto.setCommandStatus(entity.getCommandStatus());
+        dto.setExecuted(entity.getExecuted());
 
         dto.setCreatedDate(entity.getCreatedDate());
 

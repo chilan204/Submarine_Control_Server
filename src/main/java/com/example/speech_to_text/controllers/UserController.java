@@ -4,15 +4,11 @@ import com.example.speech_to_text.dto.common.response.ResponseBase;
 import com.example.speech_to_text.dto.common.response.ResponseBaseList;
 import com.example.speech_to_text.dto.request.UserRequest;
 import com.example.speech_to_text.dto.response.UserResponse;
-import com.example.speech_to_text.entities.User;
 import com.example.speech_to_text.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -93,16 +89,5 @@ public class UserController {
                         .message("Delete User successfully")
                         .build()
         );
-    }
-
-    private User getCurrentUserOrFallback() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth != null && auth.getPrincipal() instanceof UserDetails) {
-            String username = ((UserDetails) auth.getPrincipal()).getUsername();
-            return userService.findEntityByUsername(username);
-        }
-
-        return null;
     }
 }

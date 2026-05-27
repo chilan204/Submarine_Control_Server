@@ -3,8 +3,8 @@ package com.example.speech_to_text.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@Data
 @AllArgsConstructor
+@Data
 public class VoiceSampleResponse {
 
     private Long userId;

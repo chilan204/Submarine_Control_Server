@@ -51,7 +51,10 @@ public class AuthController {
     }
 
     @PostMapping("/voice-login")
-    public ResponseEntity<ResponseBase<VoiceLoginResponse>> voiceLogin(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<ResponseBase<VoiceLoginResponse>> voiceLogin(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "language", required = false) String language
+    ) {
 
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body(
@@ -62,7 +65,7 @@ public class AuthController {
         }
 
         try (InputStream is = file.getInputStream()) {
-            VoiceLoginResponse response = authService.voiceLogin(is);
+            VoiceLoginResponse response = authService.voiceLogin(is, language);
             return ResponseEntity.ok(
                     ResponseBase.<VoiceLoginResponse>builder()
                             .data(response)

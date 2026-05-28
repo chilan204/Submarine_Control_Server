@@ -35,7 +35,7 @@ public class AIServiceImpl implements AIService {
     }
 
     @Override
-    public String processVoice(InputStream inputStream) {
+    public String processVoice(InputStream inputStream, String language) {
         try {
             byte[] bytes = inputStream.readAllBytes();
 
@@ -48,6 +48,9 @@ public class AIServiceImpl implements AIService {
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("file", resource);
+            if (language != null && !language.isBlank()) {
+                body.add("language", language);
+            }
 
             return webClient.post()
                     .uri("/voice-command")

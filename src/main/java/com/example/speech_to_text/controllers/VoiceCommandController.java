@@ -32,7 +32,8 @@ public class VoiceCommandController {
 
     @PostMapping
     public ResponseEntity<ResponseBase<VoiceCommandResponse>> handle(
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "language", required = false) String language
     ) {
 
         if (file == null || file.isEmpty()) {
@@ -67,7 +68,7 @@ public class VoiceCommandController {
             //    - Command Extraction
             // =====================================================
 
-            String json = aiService.processVoice(is);
+            String json = aiService.processVoice(is, language);
 
             if (json == null || json.isBlank()) {
                 throw new RuntimeException("Empty AI response");

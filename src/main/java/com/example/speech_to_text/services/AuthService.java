@@ -15,7 +15,7 @@ public interface AuthService {
 
     PasswordLoginResponse passwordLogin(UserRequest req);
 
-    VoiceLoginResponse voiceLogin(InputStream inputStream);
+    VoiceLoginResponse voiceLogin(InputStream inputStream,  String language);
 
     void logout();
 

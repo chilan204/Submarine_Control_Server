@@ -101,9 +101,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public VoiceLoginResponse voiceLogin(InputStream inputStream) {
+    public VoiceLoginResponse voiceLogin(InputStream inputStream, String language) {
         try {
-            String json = aiService.processVoice(inputStream);
+            String json = aiService.processVoice(inputStream, language);
 
             if (json == null || json.isBlank()) {
                 throw new RuntimeException("Empty AI response");

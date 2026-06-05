@@ -151,6 +151,15 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
         }
     }
 
+    @Override
+    public void toggleActive(Long userId) {
+        VoiceSample sample = voiceSampleRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+        
+        sample.setActive(sample.getActive() == null ? true : !sample.getActive());
+        voiceSampleRepository.save(sample);
+    }
+
     private Double extractDuration(Path audioPath) {
         try (AudioInputStream audioInputStream =
                      AudioSystem.getAudioInputStream(audioPath.toFile())) {

@@ -13,9 +13,13 @@ public class VoiceSampleMapper {
         if (entity == null) return null;
 
         VoiceSampleResponse dto = new VoiceSampleResponse();
+        dto.setId(entity.getId());
         dto.setUserId(entity.getUser().getId());
+        dto.setUserName(entity.getUser().getName());
+        dto.setFileName(entity.getFileName());
         dto.setActive(entity.getActive());
         dto.setFilePath(entity.getFilePath());
+        dto.setDuration(entity.getDuration());
 
         return dto;
     }

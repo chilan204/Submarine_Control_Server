@@ -17,8 +17,8 @@ public class UserMapper {
     public User toEntity(UserRequest dto) {
         if (dto == null) return null;
 
-        Role defaultRole = roleRepository.findByCode("OFFICER_1")
-                .orElseThrow(() -> new RuntimeException("Default role not found"));
+        Role role = roleRepository.findByCode(dto.getRoleCode() != null ? dto.getRoleCode() : "OFFICER_1")
+                .orElseThrow(() -> new RuntimeException("Role not found"));
 
         User user = new User();
         user.setUsername(dto.getUsername());
@@ -26,7 +26,7 @@ public class UserMapper {
         user.setEmail(dto.getEmail());
         user.setPassword(dto.getPassword());
         user.setPhone(dto.getPhone());
-        user.setRole(defaultRole);
+        user.setRole(role);
 
         return user;
     }
@@ -37,6 +37,12 @@ public class UserMapper {
         entity.setName(dto.getName());
         entity.setEmail(dto.getEmail());
         entity.setPhone(dto.getPhone());
+
+        if (dto.getRoleCode() != null) {
+            Role role = roleRepository.findByCode(dto.getRoleCode())
+                    .orElseThrow(() -> new RuntimeException("Role not found"));
+            entity.setRole(role);
+        }
     }
 
     public UserResponse toResponseDTO(User entity) {

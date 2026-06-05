@@ -16,4 +16,6 @@ public interface VoiceSampleService {
     VoiceSample getVoiceSample(Long userId);
 
     void deleteVoiceSample(Long userId);
+
+    void toggleActive(Long userId);
 }

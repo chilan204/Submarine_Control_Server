@@ -91,6 +91,22 @@ public class VoiceSampleController {
         );
     }
 
+    @PatchMapping("/{id}/toggle-active")
+    public ResponseEntity<ResponseBase<String>> toggleActive(
+            @PathVariable Long id
+    ) {
+        voiceSampleService.toggleActive(id);
+        
+        notifyAiReloadSpeakerCache();
+
+        return ResponseEntity.ok(
+                ResponseBase.<String>builder()
+                        .data("Toggled successfully")
+                        .message("Voice sample status toggled")
+                        .build()
+        );
+    }
+
     private void notifyAiReloadSpeakerCache() {
         try {
             RestTemplate restTemplate = new RestTemplate();

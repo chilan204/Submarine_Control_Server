@@ -27,4 +27,7 @@ public class UserRequest {
     @NotBlank
     @Size(max = 20)
     private String phone;
+
+    @NotBlank
+    private String roleCode;
 }

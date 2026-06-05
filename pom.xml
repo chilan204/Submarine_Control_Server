@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>Speech_to_Text</artifactId>
+    <artifactId>Submarine_Control_Server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Speech_to_Text</name>
-    <description>Speech_to_Text</description>
+    <name>Submarine_Control_Server</name>
+    <description>Submarine_Control_Server</description>
     <url/>
     <licenses>
         <license/>

@@ -26,17 +26,17 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<ResponseBase<UserResponse>> register(@RequestBody UserRequest req) {
-        UserResponse res = authService.register(req);
-
-        return ResponseEntity.ok(
-                ResponseBase.<UserResponse>builder()
-                        .data(res)
-                        .message("Register successfully")
-                        .build()
-        );
-    }
+//    @PostMapping("/register")
+//    public ResponseEntity<ResponseBase<UserResponse>> register(@RequestBody UserRequest req) {
+//        UserResponse res = authService.register(req);
+//
+//        return ResponseEntity.ok(
+//                ResponseBase.<UserResponse>builder()
+//                        .data(res)
+//                        .message("Register successfully")
+//                        .build()
+//        );
+//    }
 
     @PostMapping("/password-login")
     public ResponseEntity<ResponseBase<PasswordLoginResponse>> login(@RequestBody UserRequest req) {

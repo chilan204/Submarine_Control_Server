@@ -7,7 +7,6 @@ import com.example.speech_to_text.dto.response.UserResponse;
 import com.example.speech_to_text.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,19 +48,19 @@ public class UserController {
         );
     }
 
-//    @PostMapping
-//    public ResponseEntity<ResponseBase<UserResponse>> createUser(
-//            @Valid @RequestBody UserRequest userRequest
-//    ) {
-//        UserResponse dto = userService.createUser(userRequest);
-//
-//        return ResponseEntity.status(HttpStatus.CREATED).body(
-//                ResponseBase.<UserResponse>builder()
-//                        .data(dto)
-//                        .message("Create User successfully")
-//                        .build()
-//        );
-//    }
+    @PostMapping
+    public ResponseEntity<ResponseBase<UserResponse>> createUser(
+            @Valid @RequestBody UserRequest userRequest
+    ) {
+        UserResponse dto = userService.createUser(userRequest);
+
+        return ResponseEntity.ok(
+                ResponseBase.<UserResponse>builder()
+                        .data(dto)
+                        .message("Create User successfully")
+                        .build()
+        );
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<ResponseBase<UserResponse>> updateUser(

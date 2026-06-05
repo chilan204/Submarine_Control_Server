@@ -1,6 +1,8 @@
 package com.example.speech_to_text.controllers;
 
 import com.example.speech_to_text.dto.common.response.ResponseBase;
+import com.example.speech_to_text.dto.common.response.ResponseBaseList;
+import com.example.speech_to_text.dto.response.VoiceSampleResponse;
 import com.example.speech_to_text.entities.VoiceSample;
 import com.example.speech_to_text.services.VoiceSampleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +11,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/voice/{userId}")
+@RequestMapping("/api/voice-samples")
 public class VoiceSampleController {
     private final VoiceSampleService voiceSampleService;
 
@@ -20,22 +24,35 @@ public class VoiceSampleController {
     }
 
     @GetMapping
+    public ResponseEntity<ResponseBaseList<VoiceSampleResponse>> getAllVoiceSamples() {
+
+        List<VoiceSampleResponse> list = voiceSampleService.getAllVoiceSamples();
+
+        return ResponseEntity.ok(
+                ResponseBaseList.<VoiceSampleResponse>builder()
+                        .data(list)
+                        .message("Get VoiceSample list successfully")
+                        .build()
+        );
+    }
+
+    @GetMapping("/{id}")
     public ResponseEntity<ResponseBase<VoiceSample>> getVoiceSample(
-            @PathVariable Long userId
+            @PathVariable Long id
     ) {
-        VoiceSample sample = voiceSampleService.getVoiceSample(userId);
+        VoiceSample dto = voiceSampleService.getVoiceSample(id);
 
         return ResponseEntity.ok(
                 ResponseBase.<VoiceSample>builder()
-                        .data(sample)
+                        .data(dto)
                         .message("Get voice sample successfully")
                         .build()
         );
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     public ResponseEntity<ResponseBase<String>> uploadVoice(
-            @PathVariable Long userId,
+            @PathVariable Long id,
             @RequestParam("file") MultipartFile file
     ) {
         if (file == null || file.isEmpty()) {
@@ -46,20 +63,9 @@ public class VoiceSampleController {
             );
         }
 
-        voiceSampleService.saveVoiceSample(userId, file);
+        voiceSampleService.saveVoiceSample(id, file);
 
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-
-            restTemplate.postForEntity(
-                    "http://localhost:5000/reload-cache",
-                    null,
-                    String.class
-            );
-
-        } catch (Exception e) {
-            System.out.println("Cannot notify AI service: " + e.getMessage());
-        }
+        notifyAiReloadSpeakerCache();
 
         return ResponseEntity.ok(
                 ResponseBase.<String>builder()
@@ -69,11 +75,13 @@ public class VoiceSampleController {
         );
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     public ResponseEntity<ResponseBase<String>> deleteVoiceSample(
-            @PathVariable Long userId
+            @PathVariable Long id
     ) {
-        voiceSampleService.deleteVoiceSample(userId);
+        voiceSampleService.deleteVoiceSample(id);
+
+        notifyAiReloadSpeakerCache();
 
         return ResponseEntity.ok(
                 ResponseBase.<String>builder()
@@ -81,5 +89,20 @@ public class VoiceSampleController {
                         .message("Voice sample deleted successfully")
                         .build()
         );
+    }
+
+    private void notifyAiReloadSpeakerCache() {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+
+            restTemplate.postForEntity(
+                    "http://localhost:5000/reload-speaker-cache",
+                    null,
+                    String.class
+            );
+
+        } catch (Exception e) {
+            System.out.println("Cannot notify AI service: " + e.getMessage());
+        }
     }
 }

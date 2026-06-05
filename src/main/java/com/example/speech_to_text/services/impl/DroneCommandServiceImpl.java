@@ -61,9 +61,7 @@ public class DroneCommandServiceImpl
         }
     }
 
-    // =====================================================
     // TAKEOFF
-    // =====================================================
 
     private void handleTakeoff(Integer altitude) {
 
@@ -84,9 +82,7 @@ public class DroneCommandServiceImpl
          */
     }
 
-    // =====================================================
     // LAND
-    // =====================================================
 
     private void handleLand() {
 
@@ -98,9 +94,7 @@ public class DroneCommandServiceImpl
          */
     }
 
-    // =====================================================
     // MOVE
-    // =====================================================
 
     private void handleMove(
             String direction,
@@ -155,9 +149,7 @@ public class DroneCommandServiceImpl
         }
     }
 
-    // =====================================================
     // RTL
-    // =====================================================
 
     private void handleRTL() {
 
@@ -169,9 +161,7 @@ public class DroneCommandServiceImpl
          */
     }
 
-    // =====================================================
     // ARM
-    // =====================================================
 
     private void handleArm() {
 
@@ -183,9 +173,7 @@ public class DroneCommandServiceImpl
          */
     }
 
-    // =====================================================
     // DISARM
-    // =====================================================
 
     private void handleDisarm() {
 
@@ -197,9 +185,7 @@ public class DroneCommandServiceImpl
          */
     }
 
-    // =====================================================
     // MOVE HELPERS
-    // =====================================================
 
     private void moveForward(int value) {
 

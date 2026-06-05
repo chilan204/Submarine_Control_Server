@@ -1,6 +1,5 @@
 package com.example.speech_to_text.security;
 
-import com.example.speech_to_text.enums.UserRole;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
@@ -30,7 +29,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private static final List<String> WHITE_LIST = List.of(
             "/api/auth",
-            "/api/voice-samples",
+            "/internal/voice-admin",
+            "/internal/command-admin",
             "/v3/api-docs",
             "/swagger-ui"
     );
@@ -87,21 +87,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
                     List<SimpleGrantedAuthority> authorities = List.of();
 
-                    if (roleStr != null) {
+                    if (roleStr != null && !roleStr.isBlank()) {
 
-                        try {
-
-                            UserRole role = UserRole.valueOf(roleStr);
-
-                            authorities = List.of(
-                                    new SimpleGrantedAuthority(
-                                            "ROLE_" + role.name()
-                                    )
-                            );
-
-                        } catch (IllegalArgumentException e) {
-                            logger.error("Invalid role in token: " + roleStr);
-                        }
+                        authorities = List.of(
+                                new SimpleGrantedAuthority("ROLE_" + roleStr)
+                        );
                     }
 
                     UsernamePasswordAuthenticationToken authToken =

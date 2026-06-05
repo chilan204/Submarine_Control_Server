@@ -2,7 +2,6 @@ package com.example.speech_to_text.security;
 
 import com.example.speech_to_text.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,15 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throws UsernameNotFoundException {
 
         return userRepository.findByUsername(username)
-                .map(user -> User.builder()
-                        .username(user.getUsername())
-                        .password(user.getPassword())
-                        .authorities(
-                                "ROLE_" +
-                                        user.getRole().getCode()
-                        )
-                        .build()
-                )
+                .map(CustomUserDetails::new)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found: " + username)
                 );

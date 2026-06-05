@@ -46,9 +46,7 @@ public class VoiceCommandController {
 
         try (InputStream is = file.getInputStream()) {
 
-            // =====================================================
             // 1. GET CURRENT USER
-            // =====================================================
 
             User user = getCurrentUser();
 
@@ -60,13 +58,11 @@ public class VoiceCommandController {
                 );
             }
 
-            // =====================================================
             // 2. AI PROCESS
             //    - Speaker Identification
             //    - Speaker Verification
             //    - Whisper Transcription
             //    - Command Extraction
-            // =====================================================
 
             String json = aiService.processVoice(is, language);
 
@@ -82,9 +78,7 @@ public class VoiceCommandController {
                             VoiceCommandResponse.class
                     );
 
-            // =====================================================
             // 3. VERIFY SPEAKER
-            // =====================================================
 
             Double verificationScore =
                     response.getVerificationScore();
@@ -102,9 +96,7 @@ public class VoiceCommandController {
                 );
             }
 
-            // =====================================================
             // 4. EXTRACT COMMAND TEXT
-            // =====================================================
 
             VoiceCommandDetail command =
                     response.getCommand();
@@ -124,9 +116,7 @@ public class VoiceCommandController {
             String commandText =
                     command.toCommandText();
 
-            // =====================================================
             // 5. COMMAND ARBITRATION
-            // =====================================================
 
             CommandArbitrationStatus arbitrationStatus =
                     arbitrationService.processCommand(
@@ -153,9 +143,7 @@ public class VoiceCommandController {
                 );
             }
 
-            // =====================================================
             // 6. ROLE AUTHORIZATION
-            // =====================================================
 
             boolean allowed =
                     commandAuthorizationService
@@ -180,15 +168,11 @@ public class VoiceCommandController {
                 );
             }
 
-            // =====================================================
             // 7. EXECUTE COMMAND
-            // =====================================================
 
             droneCommandService.execute(command);
 
-            // =====================================================
             // 8. FINAL RESPONSE
-            // =====================================================
 
             response.setStatus(
                     CommandArbitrationStatus.EXECUTED.name()
@@ -198,9 +182,7 @@ public class VoiceCommandController {
                     user.getRole().getCode()
             );
 
-            // =====================================================
             // 9. SAVE SESSION / AUDIT
-            // =====================================================
 
             userSessionService.createFromAIResponse(
                     user,

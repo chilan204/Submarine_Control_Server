@@ -52,7 +52,8 @@ public class SecurityConfiguration {
 
                         .requestMatchers(
                                 "/api/auth/**",
-                                "/api/voice-samples",
+                                "/internal/voice-admin",
+                                "/internal/command-admin",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**"
                         ).permitAll()
@@ -95,7 +96,6 @@ public class SecurityConfiguration {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of("http://localhost:3000"));
-        config.setAllowedOrigins(List.of("http://localhost:56042"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
 

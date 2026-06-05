@@ -1,6 +1,5 @@
 package com.example.submarine_control_server.dto.response;
 
-import com.example.submarine_control_server.entities.User;
 import lombok.Data;
 
 import java.time.LocalDateTime;

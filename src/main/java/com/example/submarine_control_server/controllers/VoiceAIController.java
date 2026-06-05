@@ -11,18 +11,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/internal/voice-admin")
-public class VoiceAdminController {
+public class VoiceAIController {
     private final VoiceSampleService voiceSampleService;
 
     @Autowired
-    public VoiceAdminController(VoiceSampleService voiceSampleService) {
+    public VoiceAIController(VoiceSampleService voiceSampleService) {
         this.voiceSampleService = voiceSampleService;
     }
 
     @GetMapping
-    public ResponseEntity<ResponseBaseList<VoiceSampleResponse>> getAllVoiceSamples() {
+    public ResponseEntity<ResponseBaseList<VoiceSampleResponse>> getActiveVoiceSamples() {
 
-        List<VoiceSampleResponse> data = voiceSampleService.getAllVoiceSamples();
+        List<VoiceSampleResponse> data = voiceSampleService.getActiveVoiceSamples();
 
         return ResponseEntity.ok(
                 ResponseBaseList.<VoiceSampleResponse>builder()

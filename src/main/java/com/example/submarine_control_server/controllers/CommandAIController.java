@@ -11,18 +11,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/internal/command-admin")
-public class CommandAdminController {
+public class CommandAIController {
     private final CommandDictionaryService commandDictionaryService;
 
     @Autowired
-    public CommandAdminController(CommandDictionaryService commandDictionaryService) {
+    public CommandAIController(CommandDictionaryService commandDictionaryService) {
         this.commandDictionaryService = commandDictionaryService;
     }
 
     @GetMapping
-    public ResponseEntity<ResponseBaseList<CommandDictionaryResponse>> getAllCommandDictionary() {
+    public ResponseEntity<ResponseBaseList<CommandDictionaryResponse>> getActiveCommandDictionaries() {
 
-        List<CommandDictionaryResponse> data = commandDictionaryService.getAllCommandDictionary();
+        List<CommandDictionaryResponse> data = commandDictionaryService.getActiveCommandDictionaries();
 
         return ResponseEntity.ok(
                 ResponseBaseList.<CommandDictionaryResponse>builder()

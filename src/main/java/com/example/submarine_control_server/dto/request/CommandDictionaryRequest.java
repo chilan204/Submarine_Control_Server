@@ -11,4 +11,6 @@ public class CommandDictionaryRequest {
     private String direction;
 
     private Boolean hasValue;
+
+    private Boolean active;
 }

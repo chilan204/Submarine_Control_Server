@@ -2,6 +2,7 @@ package com.example.submarine_control_server.controllers;
 
 import com.example.submarine_control_server.dto.common.response.ResponseBase;
 import com.example.submarine_control_server.dto.common.response.ResponseBaseList;
+import com.example.submarine_control_server.dto.response.UserSessionAdminResponse;
 import com.example.submarine_control_server.dto.response.UserSessionResponse;
 import com.example.submarine_control_server.entities.User;
 import com.example.submarine_control_server.services.UserService;
@@ -22,6 +23,32 @@ public class UserSessionController {
     public UserSessionController(UserSessionService userSessionService, UserService userService) {
         this.userSessionService = userSessionService;
         this.userService = userService;
+    }
+
+    @GetMapping
+    public ResponseEntity<ResponseBaseList<UserSessionAdminResponse>> getAllUserSession() {
+        List<UserSessionAdminResponse> list = userSessionService.getAllUserSession();
+
+        return ResponseEntity.ok(
+                ResponseBaseList.<UserSessionAdminResponse>builder()
+                        .data(list)
+                        .message("Get User list successfully")
+                        .build()
+        );
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseBase<UserSessionResponse>> getUserSessionById(
+            @PathVariable Long id
+    ) {
+        UserSessionResponse dto = userSessionService.getUserSessionById(id);
+
+        return ResponseEntity.ok(
+                ResponseBase.<UserSessionResponse>builder()
+                        .data(dto)
+                        .message("Get User successfully")
+                        .build()
+        );
     }
 
     @GetMapping("/me")

@@ -32,4 +32,7 @@ public class CommandDictionary extends BaseEntity {
 
     @Column
     private Boolean has_value = true;
+
+    @Column(nullable = false)
+    private Boolean active = true;
 }

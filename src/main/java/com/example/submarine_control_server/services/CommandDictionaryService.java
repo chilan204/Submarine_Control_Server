@@ -6,6 +6,8 @@ import com.example.submarine_control_server.dto.response.CommandDictionaryRespon
 import java.util.List;
 
 public interface CommandDictionaryService {
+    List<CommandDictionaryResponse> getActiveCommandDictionaries();
+
     List<CommandDictionaryResponse> getAllCommandDictionary();
 
     CommandDictionaryResponse getCommandDictionaryById(Long id);

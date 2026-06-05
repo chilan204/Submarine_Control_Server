@@ -3,6 +3,7 @@ package com.example.submarine_control_server.services.impl;
 import com.example.submarine_control_server.dto.response.VoiceSampleResponse;
 import com.example.submarine_control_server.entities.User;
 import com.example.submarine_control_server.entities.VoiceSample;
+import com.example.submarine_control_server.mapper.VoiceSampleMapper;
 import com.example.submarine_control_server.repositories.UserRepository;
 import com.example.submarine_control_server.repositories.VoiceSampleRepository;
 import com.example.submarine_control_server.services.VoiceSampleService;
@@ -27,15 +28,18 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
 
     private final UserRepository userRepository;
     private final VoiceSampleRepository voiceSampleRepository;
+    private final VoiceSampleMapper  voiceSampleMapper;
     private final String baseDir;
 
     public VoiceSampleServiceImpl(
             UserRepository userRepository,
             VoiceSampleRepository voiceSampleRepository,
+            VoiceSampleMapper voiceSampleMapper,
             @Value("${app.voice.storage:voice_samples}") String baseDir
     ) {
         this.userRepository = userRepository;
         this.voiceSampleRepository = voiceSampleRepository;
+        this.voiceSampleMapper = voiceSampleMapper;
         this.baseDir = baseDir;
     }
 
@@ -49,13 +53,18 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
     }
 
     @Override
+    public List<VoiceSampleResponse> getActiveVoiceSamples() {
+        return voiceSampleRepository.findByActiveIsTrue()
+                .stream()
+                .map(voiceSampleMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
     public List<VoiceSampleResponse> getAllVoiceSamples() {
         return voiceSampleRepository.findAll()
                 .stream()
-                .map(v -> new VoiceSampleResponse(
-                        v.getUser().getId(),
-                        v.getFilePath()
-                ))
+                .map(voiceSampleMapper::toResponseDTO)
                 .toList();
     }
 

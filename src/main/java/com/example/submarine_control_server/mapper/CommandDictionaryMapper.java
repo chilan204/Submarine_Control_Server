@@ -18,6 +18,7 @@ public class CommandDictionaryMapper {
         commandDictionary.setAction(dto.getAction());
         commandDictionary.setDirection(dto.getDirection());
         commandDictionary.setHas_value(dto.getHasValue());
+        commandDictionary.setActive(dto.getActive());
 
         return commandDictionary;
     }
@@ -31,6 +32,7 @@ public class CommandDictionaryMapper {
         dto.setAction(entity.getAction());
         dto.setDirection(entity.getDirection());
         dto.setHasValue(entity.getHas_value());
+        dto.setActive(entity.getActive());
 
         return dto;
     }

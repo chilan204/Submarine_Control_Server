@@ -23,6 +23,14 @@ public class CommandDictionaryServiceImpl implements CommandDictionaryService {
     }
 
     @Override
+    public List<CommandDictionaryResponse> getActiveCommandDictionaries() {
+        return commandDictionaryRepository.findByActiveIsTrue()
+                .stream()
+                .map(commandDictionaryMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
     public List<CommandDictionaryResponse> getAllCommandDictionary() {
         return commandDictionaryRepository.findAll().stream()
                 .map(commandDictionaryMapper::toResponseDTO)
@@ -50,6 +58,7 @@ public class CommandDictionaryServiceImpl implements CommandDictionaryService {
             commandDictionary.setDirection(updatedCommandDictionaryDTO.getDirection());
             commandDictionary.setAction(updatedCommandDictionaryDTO.getAction());
             commandDictionary.setHas_value(updatedCommandDictionaryDTO.getHasValue());
+            commandDictionary.setActive(updatedCommandDictionaryDTO.getActive());
             CommandDictionary updatedCommandDictionary = commandDictionaryRepository.save(commandDictionary);
             return commandDictionaryMapper.toResponseDTO(updatedCommandDictionary);
         }

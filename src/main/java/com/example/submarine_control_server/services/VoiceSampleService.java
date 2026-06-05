@@ -7,6 +7,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface VoiceSampleService {
+    List<VoiceSampleResponse> getActiveVoiceSamples();
+
     List<VoiceSampleResponse> getAllVoiceSamples();
 
     void saveVoiceSample(Long userId, MultipartFile file);

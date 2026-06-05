@@ -1,10 +1,12 @@
 package com.example.submarine_control_server.services.impl;
 
+import com.example.submarine_control_server.dto.response.UserSessionAdminResponse;
 import com.example.submarine_control_server.dto.response.UserSessionResponse;
 import com.example.submarine_control_server.dto.response.VoiceCommandResponse;
 import com.example.submarine_control_server.entities.User;
 import com.example.submarine_control_server.entities.UserSession;
 import com.example.submarine_control_server.enums.CommandArbitrationStatus;
+import com.example.submarine_control_server.mapper.UserSessionAdminMapper;
 import com.example.submarine_control_server.mapper.UserSessionMapper;
 import com.example.submarine_control_server.repositories.UserSessionRepository;
 import com.example.submarine_control_server.services.UserSessionService;
@@ -18,13 +20,14 @@ import java.util.List;
 public class UserSessionServiceImpl implements UserSessionService {
 
     private final UserSessionRepository userSessionRepository;
+    private final UserSessionAdminMapper userSessionAdminMapperMapper;
     private final UserSessionMapper userSessionMapper;
 
     @Override
-    public List<UserSessionResponse> getAllUserSession() {
+    public List<UserSessionAdminResponse> getAllUserSession() {
         return userSessionRepository.findAll()
                 .stream()
-                .map(userSessionMapper::toResponseDTO)
+                .map(userSessionAdminMapperMapper::toResponseDTO)
                 .toList();
     }
 
@@ -51,7 +54,6 @@ public class UserSessionServiceImpl implements UserSessionService {
                 .action(response.getCommand() != null ? response.getCommand().getAction() : null)
                 .direction(response.getCommand() != null ? response.getCommand().getDirection() : null)
                 .value(response.getCommand() != null ? response.getCommand().getValue() : null)
-                .speaker(response.getSpeaker())
                 .speakerScore(response.getSpeakerScore())
                 .verificationScore(response.getVerificationScore())
                 .role(response.getRole())

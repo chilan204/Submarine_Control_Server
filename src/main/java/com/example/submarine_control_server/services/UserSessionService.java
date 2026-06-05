@@ -1,5 +1,6 @@
 package com.example.submarine_control_server.services;
 
+import com.example.submarine_control_server.dto.response.UserSessionAdminResponse;
 import com.example.submarine_control_server.dto.response.UserSessionResponse;
 import com.example.submarine_control_server.dto.response.VoiceCommandResponse;
 import com.example.submarine_control_server.entities.User;
@@ -7,7 +8,7 @@ import com.example.submarine_control_server.entities.User;
 import java.util.List;
 
 public interface UserSessionService {
-    List<UserSessionResponse> getAllUserSession();
+    List<UserSessionAdminResponse> getAllUserSession();
 
     UserSessionResponse getUserSessionById(Long id);
 

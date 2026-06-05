@@ -1,15 +1,16 @@
 package com.example.submarine_control_server.dto.response;
 
+import com.example.submarine_control_server.entities.User;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
-public class UserSessionResponse {
+public class UserSessionAdminResponse {
 
     private Long id;
 
-    private Long userId;
+    private UserResponse user;
 
     private String transcript;
 
@@ -18,10 +19,6 @@ public class UserSessionResponse {
     private String direction;
 
     private Integer value;
-
-    private Double speakerScore;
-
-    private Double verificationScore;
 
     private String role;
 

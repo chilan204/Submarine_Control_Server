@@ -34,16 +34,10 @@ public class UserSession extends BaseEntity {
     private Integer value;
 
     @Column
-    private String speaker;
-
-    @Column
     private Double speakerScore;
 
     @Column
     private Double verificationScore;
-
-    @Column
-    private Boolean verified;
 
     @Column
     private String commandStatus;

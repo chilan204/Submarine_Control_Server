@@ -156,7 +156,7 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
         VoiceSample sample = voiceSampleRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Not found"));
         
-        sample.setActive(sample.getActive() == null ? true : !sample.getActive());
+        sample.setActive(sample.getActive() == null || !sample.getActive());
         voiceSampleRepository.save(sample);
     }
 

@@ -174,6 +174,18 @@ public class VoiceCommandController {
 
             // 8. FINAL RESPONSE
 
+            try (java.net.DatagramSocket socket = new java.net.DatagramSocket()) {
+                String direction = command.getDirection() != null ? command.getDirection() : "";
+                
+                String payload = "{\"command\": \"" + direction.toLowerCase() + "\"}";
+                byte[] sendData = payload.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                java.net.InetAddress address = java.net.InetAddress.getByName("100.112.130.80");
+                java.net.DatagramPacket packet = new java.net.DatagramPacket(sendData, sendData.length, address, 5600);
+                socket.send(packet);
+            } catch (Exception e) {
+                System.err.println("Lỗi khi gửi UDP: " + e.getMessage());
+            }
+
             response.setStatus(
                     CommandArbitrationStatus.EXECUTED.name()
             );

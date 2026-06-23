@@ -16,42 +16,47 @@ public class CommandAuthorizationServiceImpl implements CommandAuthorizationServ
 
                     "ADMIN",
                     Set.of(
-                            "TAKEOFF",
-                            "LAND",
+                            "DIVE",
+                            "SURFACE",
                             "MOVE",
                             "RTL",
                             "ARM",
                             "DISARM",
-                            "CHANGE_ROUTE"
+                            "CHANGE_ROUTE",
+                            "HOLD_POSITION"
                     ),
 
                     "OFFICER_5",
                     Set.of(
-                            "TAKEOFF",
-                            "LAND",
+                            "DIVE",
+                            "SURFACE",
                             "MOVE",
                             "RTL",
                             "ARM",
-                            "DISARM"
+                            "DISARM",
+                            "HOLD_POSITION"
                     ),
 
                     "OFFICER_4",
                     Set.of(
-                            "TAKEOFF",
-                            "LAND",
+                            "DIVE",
+                            "SURFACE",
                             "MOVE",
-                            "RTL"
+                            "RTL",
+                            "HOLD_POSITION"
                     ),
 
                     "OFFICER_3",
                     Set.of(
                             "MOVE",
-                            "RTL"
+                            "RTL",
+                            "HOLD_POSITION"
                     ),
 
                     "OFFICER_2",
                     Set.of(
-                            "MOVE"
+                            "MOVE",
+                            "RTL"
                     ),
 
                     "OFFICER_1",

@@ -28,7 +28,7 @@ public class VoiceCommandController {
     private final UserSessionService userSessionService;
     private final CommandArbitrationService arbitrationService;
     private final CommandAuthorizationService commandAuthorizationService;
-    private final DroneCommandService droneCommandService;
+    private final AuvCommandService auvCommandService;
 
     @PostMapping
     public ResponseEntity<ResponseBase<VoiceCommandResponse>> handle(
@@ -170,7 +170,7 @@ public class VoiceCommandController {
 
             // 7. EXECUTE COMMAND
 
-            droneCommandService.execute(command);
+            auvCommandService.execute(command);
 
             // 8. FINAL RESPONSE
 

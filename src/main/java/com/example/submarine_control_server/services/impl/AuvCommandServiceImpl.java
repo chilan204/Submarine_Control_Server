@@ -1,14 +1,13 @@
 package com.example.submarine_control_server.services.impl;
 
 import com.example.submarine_control_server.dto.response.VoiceCommandDetail;
-import com.example.submarine_control_server.services.DroneCommandService;
+import com.example.submarine_control_server.services.AuvCommandService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class DroneCommandServiceImpl
-        implements DroneCommandService {
+public class AuvCommandServiceImpl implements AuvCommandService {
 
     @Override
     public void execute(VoiceCommandDetail command) {
@@ -30,12 +29,12 @@ public class DroneCommandServiceImpl
 
         switch (action) {
 
-            case "TAKEOFF":
-                handleTakeoff(value);
+            case "DIVE":
+                handleDive(value);
                 break;
 
-            case "LAND":
-                handleLand();
+            case "SURFACE":
+                handleSurface();
                 break;
 
             case "MOVE":
@@ -61,37 +60,24 @@ public class DroneCommandServiceImpl
         }
     }
 
-    // TAKEOFF
+    // DIVE
 
-    private void handleTakeoff(Integer altitude) {
+    private void handleDive(Integer depth) {
 
-        int finalAltitude =
-                altitude != null ? altitude : 10;
+        int finalDepth =
+                depth != null ? depth : 10;
 
         log.info(
-                "Drone TAKEOFF to altitude {} meters",
-                finalAltitude
+                "AUV DIVE to depth {} meters",
+                finalDepth
         );
-
-        /*
-            TODO:
-            MAVSDK / MAVLink / QGC API
-
-            Example:
-            drone.takeoff(finalAltitude);
-         */
     }
 
-    // LAND
+    // SURFACE
 
-    private void handleLand() {
+    private void handleSurface() {
 
-        log.info("Drone LAND");
-
-        /*
-            TODO:
-            drone.land();
-         */
+        log.info("Drone SURFACE");
     }
 
     // MOVE
@@ -154,11 +140,6 @@ public class DroneCommandServiceImpl
     private void handleRTL() {
 
         log.info("Drone RETURN TO LAUNCH");
-
-        /*
-            TODO:
-            drone.returnToLaunch();
-         */
     }
 
     // ARM
@@ -166,11 +147,6 @@ public class DroneCommandServiceImpl
     private void handleArm() {
 
         log.info("Drone ARM");
-
-        /*
-            TODO:
-            drone.arm();
-         */
     }
 
     // DISARM
@@ -178,11 +154,6 @@ public class DroneCommandServiceImpl
     private void handleDisarm() {
 
         log.info("Drone DISARM");
-
-        /*
-            TODO:
-            drone.disarm();
-         */
     }
 
     // MOVE HELPERS
@@ -190,11 +161,6 @@ public class DroneCommandServiceImpl
     private void moveForward(int value) {
 
         log.info("Drone MOVE FORWARD {} meters", value);
-
-        /*
-            TODO:
-            MAVLink velocity / position control
-         */
     }
 
     private void moveBackward(int value) {

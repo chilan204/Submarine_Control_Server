@@ -7,6 +7,9 @@ import com.example.submarine_control_server.mapper.VoiceSampleMapper;
 import com.example.submarine_control_server.repositories.UserRepository;
 import com.example.submarine_control_server.repositories.VoiceSampleRepository;
 import com.example.submarine_control_server.services.VoiceSampleService;
+import com.example.submarine_control_server.services.AIService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,17 +32,20 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
     private final UserRepository userRepository;
     private final VoiceSampleRepository voiceSampleRepository;
     private final VoiceSampleMapper  voiceSampleMapper;
+    private final AIService aiService;
     private final String baseDir;
 
     public VoiceSampleServiceImpl(
             UserRepository userRepository,
             VoiceSampleRepository voiceSampleRepository,
             VoiceSampleMapper voiceSampleMapper,
+            AIService aiService,
             @Value("${app.voice.storage:voice_samples}") String baseDir
     ) {
         this.userRepository = userRepository;
         this.voiceSampleRepository = voiceSampleRepository;
         this.voiceSampleMapper = voiceSampleMapper;
+        this.aiService = aiService;
         this.baseDir = baseDir;
     }
 
@@ -104,6 +110,20 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
 
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
+            // ================= EXTRACT EMBEDDING =================
+            String embeddingString = null;
+            try {
+                String aiResponse = aiService.extractEmbedding(file.getInputStream());
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode rootNode = mapper.readTree(aiResponse);
+                JsonNode embeddingNode = rootNode.get("embedding");
+                if (embeddingNode != null && embeddingNode.isArray()) {
+                    embeddingString = embeddingNode.toString();
+                }
+            } catch (Exception e) {
+                System.out.println("Warning: Cannot extract speaker embedding: " + e.getMessage());
+            }
+
             // ================= UPSERT ENTITY =================
             VoiceSample voiceSample = (existing != null)
                     ? existing
@@ -114,6 +134,7 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
             voiceSample.setFilePath(relativePath);
             voiceSample.setDuration(extractDuration(targetPath));
             voiceSample.setActive(true);
+            voiceSample.setEmbedding(embeddingString);
 
             voiceSampleRepository.save(voiceSample);
 

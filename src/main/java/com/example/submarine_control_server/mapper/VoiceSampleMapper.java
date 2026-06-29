@@ -20,6 +20,7 @@ public class VoiceSampleMapper {
         dto.setActive(entity.getActive());
         dto.setFilePath(entity.getFilePath());
         dto.setDuration(entity.getDuration());
+        dto.setEmbedding(entity.getEmbedding());
 
         return dto;
     }

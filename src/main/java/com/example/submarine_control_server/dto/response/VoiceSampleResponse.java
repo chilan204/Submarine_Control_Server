@@ -18,4 +18,6 @@ public class VoiceSampleResponse {
     private String filePath;
 
     private Double duration;
+
+    private String embedding;
 }

@@ -64,4 +64,32 @@ public class AIServiceImpl implements AIService {
             throw new RuntimeException("AI service error: " + e.getMessage());
         }
     }
+
+    @Override
+    public String extractEmbedding(InputStream inputStream) {
+        try {
+            byte[] bytes = inputStream.readAllBytes();
+
+            ByteArrayResource resource = new ByteArrayResource(bytes) {
+                @Override
+                public String getFilename() {
+                    return "audio.wav";
+                }
+            };
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", resource);
+
+            return webClient.post()
+                    .uri("/extract-embedding")
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(BodyInserters.fromMultipartData(body))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+        } catch (Exception e) {
+            throw new RuntimeException("AI service error extracting embedding: " + e.getMessage());
+        }
+    }
 }

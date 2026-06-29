@@ -4,4 +4,5 @@ import java.io.InputStream;
 
 public interface AIService {
     String processVoice(InputStream inputStream, String language);
+    String extractEmbedding(InputStream inputStream);
 }

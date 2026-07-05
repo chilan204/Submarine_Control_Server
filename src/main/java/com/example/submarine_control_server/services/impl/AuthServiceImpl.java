@@ -120,7 +120,7 @@ public class AuthServiceImpl implements AuthService {
                 throw new RuntimeException("Invalid speaker from AI");
             }
 
-            if (verificationScore < 0.75) {
+            if (verificationScore < 0.45) {
                 throw new RuntimeException("Speaker verification failed");
             }
 

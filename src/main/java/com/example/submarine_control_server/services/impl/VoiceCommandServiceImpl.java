@@ -52,7 +52,7 @@ public class VoiceCommandServiceImpl implements VoiceCommandService {
 
             // 3. VERIFY SPEAKER
             Double verificationScore = response.getVerificationScore();
-            if (verificationScore == null || verificationScore < 0.75) {
+            if (verificationScore == null || verificationScore < 0.45) {
                 response.setStatus("SPEAKER_VERIFICATION_FAILED");
                 return response;
             }

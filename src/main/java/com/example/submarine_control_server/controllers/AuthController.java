@@ -5,7 +5,6 @@ import com.example.submarine_control_server.dto.request.ChangePasswordRequest;
 import com.example.submarine_control_server.dto.request.UserRequest;
 import com.example.submarine_control_server.dto.request.ValidateOtpRequest;
 import com.example.submarine_control_server.dto.response.PasswordLoginResponse;
-import com.example.submarine_control_server.dto.response.UserResponse;
 import com.example.submarine_control_server.dto.response.VoiceLoginResponse;
 import com.example.submarine_control_server.services.AuthService;
 import org.springframework.http.ResponseEntity;
@@ -135,5 +134,10 @@ public class AuthController {
                         .message("Change password successfully")
                         .build()
         );
+    }
+
+    @RequestMapping(value = "/ping", method = {RequestMethod.GET, RequestMethod.HEAD})
+    public ResponseEntity<String> ping() {
+        return ResponseEntity.ok("pong");
     }
 }

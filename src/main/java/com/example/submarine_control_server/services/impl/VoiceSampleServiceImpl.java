@@ -164,6 +164,11 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
         VoiceSample sample = voiceSampleRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Not found"));
 
+        User user = sample.getUser();
+        if (user != null) {
+            user.setVoiceSample(null);
+        }
+
         try {
             Files.deleteIfExists(Paths.get(baseDir, sample.getFilePath()));
             voiceSampleRepository.delete(sample);

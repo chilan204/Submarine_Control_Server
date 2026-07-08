@@ -7,6 +7,7 @@ import com.example.submarine_control_server.mapper.UserMapper;
 import com.example.submarine_control_server.repositories.UserRepository;
 import com.example.submarine_control_server.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<UserResponse> getAllUser() {
@@ -37,6 +39,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse createUser(UserRequest userDTO) {
         User user = userMapper.toEntity(userDTO);
+        if (user.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         return userMapper.toResponseDTO(userRepository.save(user));
     }
 

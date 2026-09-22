@@ -2,8 +2,10 @@ package com.example.submarine_control_server.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
+@NoArgsConstructor
 @Data
 public class VoiceCommandDetail {
 

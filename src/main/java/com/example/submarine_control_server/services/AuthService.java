@@ -2,7 +2,6 @@ package com.example.submarine_control_server.services;
 
 import com.example.submarine_control_server.dto.request.ChangePasswordRequest;
 import com.example.submarine_control_server.dto.request.UserRequest;
-import com.example.submarine_control_server.dto.request.ValidateOtpRequest;
 import com.example.submarine_control_server.dto.response.PasswordLoginResponse;
 import com.example.submarine_control_server.dto.response.UserResponse;
 import com.example.submarine_control_server.dto.response.VoiceLoginResponse;
@@ -18,12 +17,6 @@ public interface AuthService {
     VoiceLoginResponse voiceLogin(InputStream inputStream,  String language);
 
     void logout();
-
-    boolean validateEmail(UserRequest req);
-
-    boolean validateOtp(ValidateOtpRequest req);
-
-    void changePasswordForgot(UserRequest req);
 
     void changePassword(ChangePasswordRequest req);
 }

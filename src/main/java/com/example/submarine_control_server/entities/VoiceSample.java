@@ -28,6 +28,7 @@ public class VoiceSample extends BaseEntity {
     private Double duration;
 
     @Column
+    @Builder.Default
     private Boolean active = true;
 
     @Column(columnDefinition = "TEXT")

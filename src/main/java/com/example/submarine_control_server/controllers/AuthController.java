@@ -3,7 +3,6 @@ package com.example.submarine_control_server.controllers;
 import com.example.submarine_control_server.dto.common.response.ResponseBase;
 import com.example.submarine_control_server.dto.request.ChangePasswordRequest;
 import com.example.submarine_control_server.dto.request.UserRequest;
-import com.example.submarine_control_server.dto.request.ValidateOtpRequest;
 import com.example.submarine_control_server.dto.response.PasswordLoginResponse;
 import com.example.submarine_control_server.dto.response.VoiceLoginResponse;
 import com.example.submarine_control_server.services.AuthService;
@@ -75,7 +74,7 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(
                     ResponseBase.<VoiceLoginResponse>builder()
-                            .message(e.getMessage())
+                            .message("Voice authentication failed")
                             .build()
             );
         }
@@ -90,43 +89,9 @@ public class AuthController {
         );
     }
 
-    @PostMapping("/forgot-password/validate-email")
-    public ResponseEntity<ResponseBase<Map<String, Object>>> validateEmail(@RequestBody UserRequest req) {
-        boolean result = authService.validateEmail(req);
-
-        return ResponseEntity.ok(
-                ResponseBase.<Map<String, Object>>builder()
-                        .data(Map.of("result", result))
-                        .message("Validate email successfully")
-                        .build()
-        );
-    }
-
-    @PostMapping("/forgot-password/validate-otp")
-    public ResponseEntity<ResponseBase<Map<String, Object>>> validateOtp(@RequestBody ValidateOtpRequest req) {
-        boolean result = authService.validateOtp(req);
-
-        return ResponseEntity.ok(
-                ResponseBase.<Map<String, Object>>builder()
-                        .data(Map.of("result", result))
-                        .message("Validate OTP successfully")
-                        .build()
-        );
-    }
-
-    @PostMapping("/forgot-password/change-password")
-    public ResponseEntity<ResponseBase<Void>> changePasswordForgot(@RequestBody UserRequest req) {
-        authService.changePasswordForgot(req);
-
-        return ResponseEntity.ok(
-                ResponseBase.<Void>builder()
-                        .message("Change password successfully")
-                        .build()
-        );
-    }
-
     @PostMapping("/change-password")
-    public ResponseEntity<ResponseBase<Void>> changePassword(@RequestBody ChangePasswordRequest req) {
+    public ResponseEntity<ResponseBase<Void>> changePassword(
+            @jakarta.validation.Valid @RequestBody ChangePasswordRequest req) {
         authService.changePassword(req);
 
         return ResponseEntity.ok(

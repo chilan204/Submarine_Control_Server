@@ -14,11 +14,15 @@ public class UserMapper {
 
     private final RoleRepository roleRepository;
 
+    public Role resolveRole(String roleCode) {
+        return roleRepository.findByCode(roleCode != null ? roleCode : "OFFICER_1")
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+    }
+
     public User toEntity(UserRequest dto) {
         if (dto == null) return null;
 
-        Role role = roleRepository.findByCode(dto.getRoleCode() != null ? dto.getRoleCode() : "OFFICER_1")
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+        Role role = resolveRole(dto.getRoleCode());
 
         User user = new User();
         user.setUsername(dto.getUsername());

@@ -1,6 +1,10 @@
 package com.example.submarine_control_server.websocket;
 
 import lombok.NonNull;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -25,9 +29,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * </pre>
  * Broadcasts received telemetry to all connected clients (Flutter, web, etc.).
  */
+@Component
+@RequiredArgsConstructor
 public class TelemetryHandler extends TextWebSocketHandler {
 
     private static final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+    private final ObjectMapper objectMapper;
 
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) {
@@ -38,14 +45,37 @@ public class TelemetryHandler extends TextWebSocketHandler {
 
     @Override
     public void handleTextMessage(@NonNull WebSocketSession session, TextMessage message) throws Exception {
+        if (!"producer".equals(session.getAttributes().get("telemetryRole"))) {
+            session.close(CloseStatus.POLICY_VIOLATION);
+            return;
+        }
 
-        System.out.println("[TelemetryHandler] RECEIVED from " + session.getId() + ": " + message.getPayload());
+        validateTelemetry(message.getPayload());
 
         // Broadcast telemetry to all connected clients
         for (WebSocketSession s : sessions) {
             if (s.isOpen()) {
                 s.sendMessage(message);
             }
+        }
+    }
+
+    private void validateTelemetry(String payload) throws Exception {
+        JsonNode node = objectMapper.readTree(payload);
+        requireRange(node, "latitude", -90, 90);
+        requireRange(node, "longitude", -180, 180);
+        requireRange(node, "depth", -12000, 0);
+        requireRange(node, "heading", 0, 360);
+        requireRange(node, "speed", 0, 100);
+    }
+
+    private void requireRange(JsonNode node, String field, double min, double max) {
+        JsonNode value = node.get(field);
+        if (value == null || !value.isNumber()
+                || !Double.isFinite(value.asDouble())
+                || value.asDouble() < min
+                || value.asDouble() > max) {
+            throw new IllegalArgumentException("Invalid telemetry field: " + field);
         }
     }
 

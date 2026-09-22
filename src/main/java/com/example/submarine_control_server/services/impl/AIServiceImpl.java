@@ -19,11 +19,13 @@ import java.time.Duration;
 public class AIServiceImpl implements AIService {
 
     private final WebClient webClient;
+    private final String internalToken;
 
     public AIServiceImpl(
             WebClient.Builder builder,
             @Value("${app.ai.url:http://127.0.0.1:5000}") String baseUrl,
-            @Value("${app.ai.timeout-seconds:120}") long timeoutSeconds) {
+            @Value("${app.ai.timeout-seconds:120}") long timeoutSeconds,
+            @Value("${app.ai.internal-token:}") String internalToken) {
 
         HttpClient httpClient = HttpClient.create()
                 .responseTimeout(Duration.ofSeconds(timeoutSeconds));
@@ -32,6 +34,7 @@ public class AIServiceImpl implements AIService {
                 .baseUrl(baseUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
+        this.internalToken = internalToken;
     }
 
     @Override
@@ -54,6 +57,11 @@ public class AIServiceImpl implements AIService {
 
             return webClient.post()
                     .uri("/voice-command")
+                    .headers(headers -> {
+                        if (!internalToken.isBlank()) {
+                            headers.set("X-AI-Internal-Token", internalToken);
+                        }
+                    })
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(BodyInserters.fromMultipartData(body))
                     .retrieve()
@@ -82,6 +90,11 @@ public class AIServiceImpl implements AIService {
 
             return webClient.post()
                     .uri("/extract-embedding")
+                    .headers(headers -> {
+                        if (!internalToken.isBlank()) {
+                            headers.set("X-AI-Internal-Token", internalToken);
+                        }
+                    })
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(BodyInserters.fromMultipartData(body))
                     .retrieve()

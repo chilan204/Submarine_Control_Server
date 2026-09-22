@@ -51,7 +51,9 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(
-                                "/api/auth/**",
+                                "/api/auth/password-login",
+                                "/api/auth/voice-login",
+                                "/api/auth/ping",
                                 "/internal/voice-admin",
                                 "/internal/command-admin",
                                 "/v3/api-docs/**",
@@ -60,15 +62,23 @@ public class SecurityConfiguration {
 
                         .requestMatchers("/ws/**").permitAll()
 
+                        .requestMatchers(
+                                "/api/auth/logout",
+                                "/api/auth/change-password"
+                        ).authenticated()
+
                         .requestMatchers(HttpMethod.POST, "/api/voice-command").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/user-session/me").authenticated()
 
-                        .requestMatchers(HttpMethod.GET, "/api/user-session/user/**").hasRole("ADMIN")
+                        .requestMatchers("/api/user-session/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.DELETE, "/api/user-session/**").authenticated()
-
-                        .requestMatchers("/api/user/**").authenticated()
+                        .requestMatchers(
+                                "/api/user/**",
+                                "/api/roles/**",
+                                "/api/voice-samples/**",
+                                "/api/command-dictionaries/**"
+                        ).hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )

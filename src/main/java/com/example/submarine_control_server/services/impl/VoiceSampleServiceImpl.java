@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class VoiceSampleServiceImpl implements VoiceSampleService {
@@ -83,8 +84,18 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
         if (file == null || file.isEmpty()) {
             throw new RuntimeException("File is empty");
         }
+        if (file.getSize() > 10 * 1024 * 1024) {
+            throw new RuntimeException("Voice sample must not exceed 10 MB");
+        }
 
+        Path targetPath = null;
         try {
+            byte[] header = file.getBytes();
+            if (header.length < 12
+                    || !"RIFF".equals(new String(header, 0, 4, StandardCharsets.US_ASCII))
+                    || !"WAVE".equals(new String(header, 8, 4, StandardCharsets.US_ASCII))) {
+                throw new RuntimeException("Invalid WAV file");
+            }
             // ================= GET EXISTING SAMPLE =================
             VoiceSample existing = voiceSampleRepository.findByUserId(userId)
                     .orElse(null);
@@ -105,24 +116,23 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
             String fileName = "voice_" + UUID.randomUUID() + "_" + safeName;
             String relativePath = userId + "/" + fileName;
 
-            Path targetPath = Paths.get(baseDir, relativePath);
+            targetPath = Paths.get(baseDir, relativePath);
             Files.createDirectories(targetPath.getParent());
 
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
             // ================= EXTRACT EMBEDDING =================
-            String embeddingString = null;
-            try {
-                String aiResponse = aiService.extractEmbedding(file.getInputStream());
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode rootNode = mapper.readTree(aiResponse);
-                JsonNode embeddingNode = rootNode.get("embedding");
-                if (embeddingNode != null && embeddingNode.isArray()) {
-                    embeddingString = embeddingNode.toString();
-                }
-            } catch (Exception e) {
-                System.out.println("Warning: Cannot extract speaker embedding: " + e.getMessage());
+            Double duration = extractDuration(targetPath);
+            if (duration == null) {
+                throw new RuntimeException("Invalid or unsupported WAV audio");
             }
+            String aiResponse = aiService.extractEmbedding(file.getInputStream());
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode embeddingNode = mapper.readTree(aiResponse).get("embedding");
+            if (embeddingNode == null || !embeddingNode.isArray() || embeddingNode.isEmpty()) {
+                throw new RuntimeException("AI service did not return a speaker embedding");
+            }
+            String embeddingString = embeddingNode.toString();
 
             // ================= UPSERT ENTITY =================
             VoiceSample voiceSample = (existing != null)
@@ -132,7 +142,7 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
             voiceSample.setUser(user);
             voiceSample.setFileName(fileName);
             voiceSample.setFilePath(relativePath);
-            voiceSample.setDuration(extractDuration(targetPath));
+            voiceSample.setDuration(duration);
             voiceSample.setActive(true);
             voiceSample.setEmbedding(embeddingString);
 
@@ -147,14 +157,22 @@ public class VoiceSampleServiceImpl implements VoiceSampleService {
                 }
             }
 
-        } catch (IOException e) {
+        } catch (Exception e) {
+            if (targetPath != null) {
+                try {
+                    Files.deleteIfExists(targetPath);
+                } catch (IOException ignored) {
+                    // Preserve the original failure.
+                }
+            }
             throw new RuntimeException("Error saving voice sample", e);
         }
     }
 
     @Override
-    public VoiceSample getVoiceSample(Long userId) {
+    public VoiceSampleResponse getVoiceSample(Long userId) {
         return voiceSampleRepository.findByUserId(userId)
+                .map(voiceSampleMapper::toResponseDTO)
                 .orElseThrow(() -> new RuntimeException("No voice sample"));
     }
 

@@ -49,14 +49,22 @@ application:
     refreshExpiration: ${JWT_REFRESH_EXP}
 
 app:
+  auv:
+    host: ${AUV_HOST:100.112.130.80}
+    port: ${AUV_PORT:5600}
+
+  telemetry:
+    ingest-token: ${TELEMETRY_INGEST_TOKEN:}
+
   ai:
     url: ${AI_URL:http://127.0.0.1:5000}
     timeout-seconds: ${AI_TIMEOUT:120}
+    internal-token: ${AI_INTERNAL_TOKEN:}
 
   init:
     admin:
-      username: ${ADMIN_USERNAME:admin}
-      password: ${ADMIN_PASSWORD:admin}
-      email: ${ADMIN_EMAIL:admin@example.com}
-      name: ${ADMIN_NAME:Administrator}
-      phone: ${ADMIN_PHONE:000000000}
+      username: ${ADMIN_USERNAME}
+      password: ${ADMIN_PASSWORD}
+      email: ${ADMIN_EMAIL}
+      name: ${ADMIN_NAME}
+      phone: ${ADMIN_PHONE}

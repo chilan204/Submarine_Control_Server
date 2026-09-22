@@ -3,9 +3,11 @@ package com.example.submarine_control_server.controllers;
 import com.example.submarine_control_server.dto.common.response.ResponseBase;
 import com.example.submarine_control_server.dto.common.response.ResponseBaseList;
 import com.example.submarine_control_server.dto.response.VoiceSampleResponse;
-import com.example.submarine_control_server.entities.VoiceSample;
 import com.example.submarine_control_server.services.VoiceSampleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -17,6 +19,12 @@ import java.util.List;
 @RequestMapping("/api/voice-samples")
 public class VoiceSampleController {
     private final VoiceSampleService voiceSampleService;
+
+    @Value("${app.ai.url:http://127.0.0.1:5000}")
+    private String aiBaseUrl;
+
+    @Value("${app.ai.internal-token:}")
+    private String aiInternalToken;
 
     @Autowired
     public VoiceSampleController(VoiceSampleService voiceSampleService) {
@@ -37,13 +45,13 @@ public class VoiceSampleController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseBase<VoiceSample>> getVoiceSample(
+    public ResponseEntity<ResponseBase<VoiceSampleResponse>> getVoiceSample(
             @PathVariable Long id
     ) {
-        VoiceSample dto = voiceSampleService.getVoiceSample(id);
+        VoiceSampleResponse dto = voiceSampleService.getVoiceSample(id);
 
         return ResponseEntity.ok(
-                ResponseBase.<VoiceSample>builder()
+                ResponseBase.<VoiceSampleResponse>builder()
                         .data(dto)
                         .message("Get voice sample successfully")
                         .build()
@@ -110,10 +118,14 @@ public class VoiceSampleController {
     private void notifyAiReloadSpeakerCache() {
         try {
             RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            if (!aiInternalToken.isBlank()) {
+                headers.set("X-AI-Internal-Token", aiInternalToken);
+            }
 
             restTemplate.postForEntity(
-                    "http://localhost:5000/reload-speaker-cache",
-                    null,
+                    aiBaseUrl + "/reload-speaker-cache",
+                    new HttpEntity<>(headers),
                     String.class
             );
 

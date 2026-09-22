@@ -8,6 +8,7 @@ public class VoiceCommandResponse {
 
     private String status;
 
+    @JsonProperty("speaker_id")
     private String speaker;
 
     @JsonProperty("speaker_score")
@@ -15,6 +16,8 @@ public class VoiceCommandResponse {
 
     @JsonProperty("verification_score")
     private Double verificationScore;
+
+    private Boolean verified;
 
     private String text;
 

@@ -20,19 +20,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SubmarineControlServerApplication implements CommandLineRunner {
 
-    @Value("${app.init.admin.username:admin}")
+    @Value("${app.init.admin.username}")
     private String adminUsername;
 
-    @Value("${app.init.admin.password:admin}")
+    @Value("${app.init.admin.password}")
     private String adminPassword;
 
-    @Value("${app.init.admin.email:admin@example.com}")
+    @Value("${app.init.admin.email}")
     private String adminEmail;
 
-    @Value("${app.init.admin.name:Administrator}")
+    @Value("${app.init.admin.name}")
     private String adminName;
 
-    @Value("${app.init.admin.phone:000000000}")
+    @Value("${app.init.admin.phone}")
     private String adminPhone;
 
     private final UserRepository userRepository;
@@ -48,6 +48,13 @@ public class SubmarineControlServerApplication implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+
+        if (adminPassword == null || adminPassword.length() < 12
+                || "admin".equalsIgnoreCase(adminPassword)) {
+            throw new IllegalStateException(
+                    "ADMIN_PASSWORD must be explicitly configured with at least 12 characters"
+            );
+        }
 
         // =====================================================
         // INIT ROLES

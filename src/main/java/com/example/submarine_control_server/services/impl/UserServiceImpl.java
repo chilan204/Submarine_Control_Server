@@ -1,6 +1,7 @@
 package com.example.submarine_control_server.services.impl;
 
 import com.example.submarine_control_server.dto.request.UserRequest;
+import com.example.submarine_control_server.dto.request.UserUpdateRequest;
 import com.example.submarine_control_server.dto.response.UserResponse;
 import com.example.submarine_control_server.entities.User;
 import com.example.submarine_control_server.mapper.UserMapper;
@@ -46,11 +47,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse updateUser(Long id, UserRequest updatedUserDTO) {
+    public UserResponse updateUser(Long id, UserUpdateRequest updatedUserDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        userMapper.updateEntity(user, updatedUserDTO);
+        user.setUsername(updatedUserDTO.getUsername());
+        user.setName(updatedUserDTO.getName());
+        user.setEmail(updatedUserDTO.getEmail());
+        user.setPhone(updatedUserDTO.getPhone());
+        user.setRole(userMapper.resolveRole(updatedUserDTO.getRoleCode()));
+        if (updatedUserDTO.getPassword() != null && !updatedUserDTO.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(updatedUserDTO.getPassword()));
+        }
 
         return userMapper.toResponseDTO(userRepository.save(user));
     }

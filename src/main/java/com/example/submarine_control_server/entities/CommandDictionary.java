@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.Builder;
 import lombok.experimental.SuperBuilder;
 
 @Entity
@@ -31,8 +32,10 @@ public class CommandDictionary extends BaseEntity {
     private String direction;
 
     @Column
+    @Builder.Default
     private Boolean has_value = true;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
 }

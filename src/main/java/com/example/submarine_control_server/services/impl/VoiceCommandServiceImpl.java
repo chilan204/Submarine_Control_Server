@@ -9,11 +9,17 @@ import com.example.submarine_control_server.services.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +32,12 @@ public class VoiceCommandServiceImpl implements VoiceCommandService {
     private final CommandArbitrationService arbitrationService;
     private final CommandAuthorizationService commandAuthorizationService;
     private final AuvCommandService auvCommandService;
+
+    @Value("${app.auv.host}")
+    private String auvHost;
+
+    @Value("${app.auv.port:5600}")
+    private int auvPort;
 
     @Override
     public VoiceCommandResponse handleVoiceCommand(MultipartFile file, String language) {
@@ -40,7 +52,7 @@ public class VoiceCommandServiceImpl implements VoiceCommandService {
             // 2. AI PROCESS
             //    - Speaker Identification
             //    - Speaker Verification
-            //    - Whisper Transcription
+            //    - Offline Vosk transcription with command grammar
             //    - Command Extraction
             String json = aiService.processVoice(is, language);
             if (json == null || json.isBlank()) {
@@ -52,7 +64,17 @@ public class VoiceCommandServiceImpl implements VoiceCommandService {
 
             // 3. VERIFY SPEAKER
             Double verificationScore = response.getVerificationScore();
-            if (verificationScore == null || verificationScore < 0.45) {
+            if (!Boolean.TRUE.equals(response.getVerified())
+                    || verificationScore == null
+                    || verificationScore < 0.45) {
+                response.setStatus("SPEAKER_VERIFICATION_FAILED");
+                return response;
+            }
+
+            // The voice is a second authorization factor for the current user,
+            // not merely any registered speaker.
+            if (response.getSpeaker() == null
+                    || !response.getSpeaker().equals(String.valueOf(user.getId()))) {
                 response.setStatus("SPEAKER_VERIFICATION_FAILED");
                 return response;
             }
@@ -66,15 +88,7 @@ public class VoiceCommandServiceImpl implements VoiceCommandService {
 
             String commandText = command.toCommandText();
 
-            // 5. COMMAND ARBITRATION
-            CommandArbitrationStatus arbitrationStatus = arbitrationService.processCommand(user, commandText);
-            if (arbitrationStatus != CommandArbitrationStatus.EXECUTED) {
-                response.setStatus(arbitrationStatus.name());
-                response.setRole(user.getRole().getCode());
-                return response;
-            }
-
-            // 6. ROLE AUTHORIZATION
+            // 5. ROLE AUTHORIZATION (before the command can affect arbitration)
             boolean allowed = commandAuthorizationService.isAllowed(user.getRole(), command);
             if (!allowed) {
                 response.setStatus("ROLE_DENIED");
@@ -82,21 +96,33 @@ public class VoiceCommandServiceImpl implements VoiceCommandService {
                 return response;
             }
 
-            // 7. EXECUTE COMMAND
-            auvCommandService.execute(command);
-
-            // 8. SEND UDP COMMAND (IF APPLICABLE)
-            try (java.net.DatagramSocket socket = new java.net.DatagramSocket()) {
-                String direction = command.getDirection() != null ? command.getDirection() : "";
-                String payload = "{\"command\": \"" + direction.toLowerCase() + "\"}";
-                byte[] sendData = payload.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-                java.net.InetAddress address = java.net.InetAddress.getByName("100.112.130.80");
-                java.net.DatagramPacket packet = new java.net.DatagramPacket(sendData, sendData.length, address, 5600);
-                socket.send(packet);
-            } catch (Exception e) {
-                System.err.println("Lỗi khi gửi UDP: " + e.getMessage());
+            // The currently deployed AUV accepts only forward/backward movement.
+            if (!isSupportedHardwareCommand(command)) {
+                response.setStatus("INVALID_COMMAND");
+                response.setRole(user.getRole().getCode());
+                return response;
             }
 
+            // 6. COMMAND ARBITRATION
+            CommandArbitrationStatus arbitrationStatus = arbitrationService.processCommand(user, commandText);
+            if (arbitrationStatus != CommandArbitrationStatus.EXECUTED) {
+                response.setStatus(arbitrationStatus.name());
+                response.setRole(user.getRole().getCode());
+                return response;
+            }
+
+            // 7. DELIVER TO AUV. Never report success when delivery fails.
+            try {
+                sendUdpCommand(command);
+            } catch (Exception e) {
+                response.setStatus("DELIVERY_FAILED");
+                response.setRole(user.getRole().getCode());
+                userSessionService.createFromAIResponse(user, response);
+                return response;
+            }
+
+            // 8. Record the successfully delivered command locally.
+            auvCommandService.execute(command);
             response.setStatus(CommandArbitrationStatus.EXECUTED.name());
             response.setRole(user.getRole().getCode());
 
@@ -107,6 +133,32 @@ public class VoiceCommandServiceImpl implements VoiceCommandService {
 
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private boolean isSupportedHardwareCommand(VoiceCommandDetail command) {
+        if (!"MOVE".equals(command.getAction()) || command.getDirection() == null) {
+            return false;
+        }
+        return "FORWARD".equals(command.getDirection())
+                || "BACKWARD".equals(command.getDirection());
+    }
+
+    private void sendUdpCommand(VoiceCommandDetail command) throws Exception {
+        String payload = mapper.writeValueAsString(Map.of(
+                "command", command.getDirection().toLowerCase()
+        ));
+        byte[] sendData = payload.getBytes(StandardCharsets.UTF_8);
+        InetAddress address = InetAddress.getByName(auvHost);
+
+        try (DatagramSocket socket = new DatagramSocket()) {
+            DatagramPacket packet = new DatagramPacket(
+                    sendData,
+                    sendData.length,
+                    address,
+                    auvPort
+            );
+            socket.send(packet);
         }
     }
 

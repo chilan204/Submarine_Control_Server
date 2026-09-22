@@ -6,6 +6,9 @@ import com.example.submarine_control_server.dto.request.CommandDictionaryRequest
 import com.example.submarine_control_server.dto.response.CommandDictionaryResponse;
 import com.example.submarine_control_server.services.CommandDictionaryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -16,6 +19,12 @@ import java.util.List;
 @RequestMapping("/api/command-dictionaries")
 public class CommandDictionaryController {
     private final CommandDictionaryService commandDictionaryService;
+
+    @Value("${app.ai.url:http://127.0.0.1:5000}")
+    private String aiBaseUrl;
+
+    @Value("${app.ai.internal-token:}")
+    private String aiInternalToken;
 
     @Autowired
     public CommandDictionaryController(CommandDictionaryService commandDictionaryService) {
@@ -100,10 +109,14 @@ public class CommandDictionaryController {
     private void notifyAiReloadCommandCache() {
         try {
             RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            if (!aiInternalToken.isBlank()) {
+                headers.set("X-AI-Internal-Token", aiInternalToken);
+            }
 
             restTemplate.postForEntity(
-                    "http://localhost:5000/reload-command-cache",
-                    null,
+                    aiBaseUrl + "/reload-command-cache",
+                    new HttpEntity<>(headers),
                     String.class
             );
 

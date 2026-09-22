@@ -53,6 +53,7 @@ public class JwtUtil {
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(signingKey)
+                .requireIssuer("speech-to-text-system")
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -84,6 +85,7 @@ public class JwtUtil {
             final String username = extractUsername(token);
 
             return username.equals(userDetails.getUsername())
+                    && "access".equals(extractClaim(token, claims -> claims.get("type", String.class)))
                     && !isTokenExpired(token);
 
         } catch (JwtException | IllegalArgumentException e) {

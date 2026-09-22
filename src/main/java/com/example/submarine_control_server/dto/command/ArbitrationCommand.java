@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ArbitrationCommand {
 
+    private String requestId;
+
     private Long userId;
 
     private Integer priority;

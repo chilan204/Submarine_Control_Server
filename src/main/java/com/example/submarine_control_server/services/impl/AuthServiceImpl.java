@@ -2,7 +2,6 @@ package com.example.submarine_control_server.services.impl;
 
 import com.example.submarine_control_server.dto.request.ChangePasswordRequest;
 import com.example.submarine_control_server.dto.request.UserRequest;
-import com.example.submarine_control_server.dto.request.ValidateOtpRequest;
 import com.example.submarine_control_server.dto.response.PasswordLoginResponse;
 import com.example.submarine_control_server.dto.response.UserResponse;
 import com.example.submarine_control_server.dto.response.VoiceLoginResponse;
@@ -18,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -71,14 +71,14 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsername(
                 req.getUsername().toLowerCase()
         ).orElseThrow(() ->
-                new RuntimeException("User not found")
+                new RuntimeException("Invalid credentials")
         );
 
         if (!passwordEncoder.matches(
                 req.getPassword(),
                 user.getPassword()
         )) {
-            throw new RuntimeException("Invalid password");
+            throw new RuntimeException("Invalid credentials");
         }
 
         String roleCode =
@@ -114,13 +114,14 @@ public class AuthServiceImpl implements AuthService {
             // FIX: đúng field name từ AI
             String speaker = node.path("speaker_id").asText();
             double verificationScore = node.path("verification_score").asDouble();
+            boolean verified = node.path("verified").asBoolean(false);
             String text = node.path("text").asText();
 
             if (speaker == null || speaker.isBlank()) {
                 throw new RuntimeException("Invalid speaker from AI");
             }
 
-            if (verificationScore < 0.45) {
+            if (!verified || verificationScore < 0.45) {
                 throw new RuntimeException("Speaker verification failed");
             }
 
@@ -159,50 +160,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public boolean validateEmail(UserRequest req) {
-
-        User user = userRepository.findByUsername(
-                req.getUsername().toLowerCase()
-        ).orElseThrow(() ->
-                new RuntimeException("User not found")
-        );
-
-        return req.getEmail().equals(user.getEmail());
-    }
-
-    @Override
-    public boolean validateOtp(ValidateOtpRequest req) {
-
-        userRepository.findByUsername(
-                req.getUsername().toLowerCase()
-        ).orElseThrow(() ->
-                new RuntimeException("User not found")
-        );
-
-        return "1111".equals(req.getOtp());
-    }
-
-    @Override
-    public void changePasswordForgot(UserRequest req) {
-
-        User user = userRepository.findByUsername(
-                req.getUsername().toLowerCase()
-        ).orElseThrow(() ->
-                new RuntimeException("User not found")
-        );
-
-        user.setPassword(
-                passwordEncoder.encode(req.getPassword())
-        );
-
-        userRepository.save(user);
-    }
-
-    @Override
     public void changePassword(ChangePasswordRequest req) {
-
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(
-                req.getUsername().toLowerCase()
+                username
         ).orElseThrow(() ->
                 new RuntimeException("User not found")
         );

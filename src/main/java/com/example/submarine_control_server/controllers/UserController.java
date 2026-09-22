@@ -3,6 +3,7 @@ package com.example.submarine_control_server.controllers;
 import com.example.submarine_control_server.dto.common.response.ResponseBase;
 import com.example.submarine_control_server.dto.common.response.ResponseBaseList;
 import com.example.submarine_control_server.dto.request.UserRequest;
+import com.example.submarine_control_server.dto.request.UserUpdateRequest;
 import com.example.submarine_control_server.dto.response.UserResponse;
 import com.example.submarine_control_server.services.UserService;
 import jakarta.validation.Valid;
@@ -65,7 +66,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseBase<UserResponse>> updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody UserRequest updateUser
+            @Valid @RequestBody UserUpdateRequest updateUser
     ) {
         UserResponse dto = userService.updateUser(id, updateUser);
 

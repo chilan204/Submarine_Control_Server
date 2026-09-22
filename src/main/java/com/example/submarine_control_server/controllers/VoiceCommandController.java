@@ -70,6 +70,15 @@ public class VoiceCommandController {
                 );
             }
 
+            if ("DELIVERY_FAILED".equals(status)) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(
+                        ResponseBase.<VoiceCommandResponse>builder()
+                                .data(response)
+                                .message("AUV command delivery failed")
+                                .build()
+                );
+            }
+
             if ("EXECUTED".equals(status)) {
                 return ResponseEntity.ok(
                         ResponseBase.<VoiceCommandResponse>builder()
@@ -90,7 +99,7 @@ public class VoiceCommandController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(
                     ResponseBase.<VoiceCommandResponse>builder()
-                            .message(e.getMessage())
+                            .message("Voice command processing failed")
                             .build()
             );
         }
